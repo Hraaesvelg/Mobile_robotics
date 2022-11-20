@@ -4,3 +4,6 @@ fonction de global navigation:
 	 - coordonnée du but
 
 - sortie: chemin a suivre pour atteindre le but
+
+
+classe 
