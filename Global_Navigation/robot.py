@@ -23,6 +23,7 @@ class RobotNav:
         self.length = 110
         self.width = 110
         self.dist_wheel = 95
+        self.speed = 50
 
         self.x_kalman = None
         self.y_kalman = None
@@ -109,7 +110,7 @@ class RobotNav:
         """
         if self.start is not None and self.goal is not None:
             goal = self.path(self.crt_stp + 1)
-            beta = math.atan2(goal[1] - self.y_kalman, goal[0]- self.x_kalman)
+            beta = math.atan2(goal[1] - self.y_kalman, goal[0] - self.x_kalman)
 
             if beta - self.theta_kalman < -np.pi:
                 beta = -(beta - self.theta_kalman + np.pi)
@@ -126,17 +127,15 @@ class RobotNav:
         :param case_width: width of the case which path(crt_stp) is the center
         :return:
         """
-        next_step = goal = self.path(self.crt_stp + 1)
-        dist = math.sqrt((self.x_kalman - next_step[0])^2+(self.y_kalman - next_step[1])^2)
+        next_step = self.path(self.crt_stp + 1)
+        dist = math.sqrt((self.x_kalman - next_step[0]) ^ 2 + (self.y_kalman - next_step[1]) ^ 2)
 
-        if dist<tolerance:
+        if dist < tolerance:
             if show:
                 print(self.path(self.crt_stp), self.crt_stp)
-            if self.crt_stp == len(self.path)-1:
+            if self.crt_stp == len(self.path) - 1:
                 self.finished = True
             else:
                 self.crt_stp = self.crt_stp + 1
 
         return self.crt_stp
-
-    def 
