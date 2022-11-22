@@ -18,7 +18,7 @@ grid = Grid(matrix=matrix)
 start = grid.node(0, 0)
 end = grid.node(5, 9)
 
-finder = AStarFinder(diagonal_movement=DiagonalMovement.never)
+finder = AStarFinder(diagonal_movement=DiagonalMovement.always)
 path, runs = finder.find_path(start, end, grid)
 print(path)
 print('operations:', runs, 'path length:', len(path))

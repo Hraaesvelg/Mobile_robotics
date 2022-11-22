@@ -7,8 +7,8 @@ import thymio_control as ctrl
 from tdmclient import ClientAsync, aw
 
 Thym = rbt.RobotNav()
-Thym.initialize_starting_pos(cam_data)
-Thym.set_goal(goal)
+Thym.initialize_starting_pos(((0,0),(0,0)))
+Thym.set_goal((5,9))
 
 while True:
     Thym.update_step_respo(case_width = 50, tolerance = 10, show = False)
