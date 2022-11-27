@@ -11,7 +11,7 @@ def get_image():
 
     if result:
         # save the image
-        cv2.imwrite("cercle.png", image)
+        cv2.imwrite("field.png", image)
         print("here")
     else:
         print("no image read")
@@ -22,8 +22,8 @@ def get_image():
 
 def detect_start(image):
 
-    template1 = cv2.imread('cerclebleu.png')
-    template2 = cv2.imread('cerclevert.png')
+    template1 = cv2.imread('cercleb.png')
+    template2 = cv2.imread('cerclev.png')
     _, w1, h1  = template1.shape[::-1]
     _, w2, h2  = template2.shape[::-1]
     methods = ['cv2.TM_CCOEFF', 'cv2.TM_CCOEFF_NORMED', 'cv2.TM_CCORR','cv2.TM_CCORR_NORMED', 'cv2.TM_SQDIFF', 'cv2.TM_SQDIFF_NORMED']
@@ -79,13 +79,15 @@ def detect_obstacle(image):   # pas necessaire coord des obstacles, juste une im
     img = image.copy()
     filtered_img = cv2.bilateralFilter(img,3,75,75)
     gray = cv2.cvtColor(filtered_img, cv2.COLOR_BGR2GRAY)
-    ret, gray1 = cv2.threshold(gray,50,255,cv2.THRESH_BINARY)
-    d = 1 #ksize seulement impair
-    sigmacolo = 10
-    sigmaspace = 12
-    gray2 =  cv2.bilateralFilter(gray1,d,sigmacolo,sigmaspace)
+    #ret, gray1 = cv2.threshold(gray,50,255,cv2.THRESH_BINARY)
+    ret, gray1 = cv2.threshold(gray,100,255,cv2.THRESH_BINARY)
+    # d = 1 #ksize seulement impair
+    # sigmacolo = 10
+    # sigmaspace = 12
+    # gray2 =  cv2.bilateralFilter(gray1,d,sigmacolo,sigmaspace)
     
-    gray3 = cv2.adaptiveThreshold(gray2,255,cv2.ADAPTIVE_THRESH_MEAN_C,cv2.THRESH_BINARY,11,2)
+    gray3 = cv2.adaptiveThreshold(gray1,255,cv2.ADAPTIVE_THRESH_MEAN_C,cv2.THRESH_BINARY,11,2)
+    cv2.imwrite("contour.png", gray3)
     contours, hierarchy = cv2.findContours(gray3,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
    
 
@@ -105,7 +107,7 @@ print("end reading")
 # image = get_image()
 # print("end reading1")
 
-image = cv2.imread("cercle1.png")
+image = cv2.imread("field.png")
 start_coor, img_start, res_start1,res_start2 = detect_start(image)
 target_coor, img_target, res_target = detect_target(img_start)
 gray2, contours, hierarchy = detect_obstacle(img_target)
