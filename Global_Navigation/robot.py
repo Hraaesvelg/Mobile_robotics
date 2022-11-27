@@ -8,8 +8,6 @@ from filterpy.kalman import KalmanFilter
 from pathfinding.core.diagonal_movement import DiagonalMovement
 from pathfinding.core.grid import Grid
 from pathfinding.finder.a_star import AStarFinder
-
-import labyrinthe as lbr
 import numpy as np
 
 
