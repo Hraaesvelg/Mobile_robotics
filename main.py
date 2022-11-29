@@ -1,12 +1,12 @@
 import cv2
 from matplotlib import pyplot as plt
 import numpy as np
-#import Vision.vision as vs
+import Vision.vision as vs
 import Global_Navigation.robot as rbt
 import pyvisgraph as vg
 from geopandas import GeoSeries
 from shapely.geometry import Polygon, Point, LineString
-import main_bis as vs
+#import main_bis as vs
 
 def get_path_lines(image, path):
     """
@@ -95,7 +95,7 @@ print(obstacles)
 print('the points found are: ')
 
 poly = obstacles_to_polygons(obstacles)
-poly = secure_path(poly, 3)
+poly = secure_path(poly, 30)
 points = polygons_2_points(poly)
 
 plot_geometric_data(poly)
