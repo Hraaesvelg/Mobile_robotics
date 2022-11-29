@@ -3,27 +3,18 @@ from matplotlib import pyplot as plt
 import numpy as np
 import Vision.vision as vs
 import Global_Navigation.robot as rbt
-import Global_Navigation.test_vg as tst
-import Global_Navigation.visibility_graph as gvg
-
 import pyvisgraph as vg
-import math
-import geopandas as gpd
 from geopandas import GeoSeries
 from shapely.geometry import Polygon, Point, LineString
-
-
-def point_2_polygons(obst):
-    poly = []
-    for obstacle in obst:
-        polygon = []
-        for point in obstacle:
-            polygon.append(vg.Point(point[0][0], point[0][1]))
-        poly.append(polygon)
-    return poly
-
+# import main_bis as mb
 
 def get_path_lines(image, path):
+    """
+    Draw the lines on our CV2 image
+    :param image: image we want to draw onto
+    :param path: generated path using the vysgraph function
+    :return: the modified image
+    """
     path_lines = []
     for i in range(len(path) - 1):
         path_lines.append([(int(path[i].x), int(path[i].y)), (int(path[i + 1].x), int(path[i + 1].y))])
@@ -32,13 +23,26 @@ def get_path_lines(image, path):
     return image
 
 
-def plot_geometric_data(g):
-    g.plot('Reds')
-    plt.show()
+def plot_geometric_data(map, color = 'Blues', show = True):
+    """
+    Plot obstacles using geoserie plot function
+    :param show:  Boolean to plot the geoserie or not
+    :param color: panel of colors used by our plot function
+    :param map: geoserie we want to plot
+    :return: plot the map
+    """
+    map.plot(color)
+    if show:
+        plt.show()
 
 
 def obstacles_to_polygons(obst):
-    # Convert this polygone list into a geometric set of polygons
+    """
+    Convert the points given by Vision functions, then convert them using Polygon (check made to know
+    if the conversion is possible)
+    :param obst:  list of points detected by the Vision related functions
+    :return polygons: A geoserie elements containing all the obstacle
+    """
     poly = []
     final = []
     for obstacle in obst:
@@ -46,58 +50,39 @@ def obstacles_to_polygons(obst):
         for point in obstacle:
             polygon.append([point[0][0], point[0][1]])
         poly.append(polygon)
+        # test to know if the obstacle can be converted
         if np.size(polygon) > 6:
             final.append(Polygon(polygon))
-    g = GeoSeries(final)
-    return g
+    polygons = GeoSeries(final)
+    return polygons
 
 
-def polygons_add_margin(g, margin):
-    # Geometric graph of the obstacles with the margin
-    g=g.buffer(margin,join_style=2)
-    return g
+def secure_path(obstacle, margin):
+    """
+    Use this function to add a security margin between the obstacle and the path of the robot
+    :param obstacle:
+    :param margin: the margin by which the polygon is enlarged
+    :return: the enlarged obstacles
+    """
+    obstacle=obstacle.buffer(margin, join_style=2)
+    return obstacle
 
 
-def polygons_to_VisibilityGraph(g):
-    # Visibility graph created from the geometric graph
-    polygons = []
-    for poly in g:
-        x, y = poly.exterior.coords.xy
-        polygon_vg = []
+def polygons_2_points(polygons):
+    """
+    Inverse of obstacles_to_polygons(): turn a set of polygons in points for vysgraph algorithm
+    :param polygons: set of polygons
+    :return: polygons in the form of points
+    """
+    polygon = []
+    for pol in polygons:
+        x, y = pol.exterior.coords.xy
+        list_point = []
         for i in range(len(x)):
-            polygon_vg.append(vg.Point(x[i], y[i]))
-        polygons.append(polygon_vg)
+            list_point.append(vg.Point(x[i], y[i]))
+        polygon.append(list_point)
+    return polygon
 
-    visgraph = vg.VisGraph()
-    visgraph.build(polygons)
-
-    return visgraph
-"""
-pts2 = obstacles_to_polygons(obstacles)
-print(pts2)
-plot_geometric_data(pts2)
-
-pts2_marged = polygons_add_margin(pts2,30)
-pts2_marged = pts2_marged[2:]
-pts2_mrgd = GeoSeries([pts2_marged[2], pts2_marged[4]])
-
-print(pts2_mrgd)
-plot_geometric_data(pts2_mrgd)
-
-vs_graph = polygons_to_VisibilityGraph(pts2_mrgd)
-
-
-
-start = vg.Point(start[0][0], start[0][1])
-target = vg.Point(target[0], target[1])
-target = vg.Point(400, 600)
-
-shortest = vs_graph.shortest_path(start, target)
-path = shortest
-
-print(path)
-
-"""
 
 
 # main
@@ -105,34 +90,21 @@ img = "Vision/cercle1.png"
 
 thymio = rbt.RobotNav()
 start, target, obstacles, size = vs.transmit_data(img, False)
-
+print(obstacles)
 
 print('the points found are: ')
-points = point_2_polygons(obstacles)
+
 poly = obstacles_to_polygons(obstacles)
-poly = polygons_add_margin(poly, 0)
-
-polygons = []
-for pol in poly:
-    x, y = pol.exterior.coords.xy
-    polygon_vg = []
-    for i in range(len(x)):
-        polygon_vg.append(vg.Point(x[i], y[i]))
-    polygons.append(polygon_vg)
-
-print(polygons)
-
-
-
-points = polygons
+poly = secure_path(poly, 30)
+points = polygons_2_points(poly)
 
 plot_geometric_data(poly)
 
 
 start = vg.Point(start[0][0], start[0][1])
 print(start)
-#target = vg.Point(target[0], target[1])
-target = vg.Point(400, 244)
+target = vg.Point(target[0], target[1])
+target = vg.Point(350, 244)
 
 g = vg.VisGraph()
 print(g)

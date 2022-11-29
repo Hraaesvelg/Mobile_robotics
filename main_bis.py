@@ -20,10 +20,10 @@ def get_image():
 
 
 
-def detect_start(image):
+def detect_start(image, show):
 
-    template1 = cv2.imread('cercleb.png')
-    template2 = cv2.imread('cerclev.png')
+    template1 = cv2.imread('Vision/cercleb.png')
+    template2 = cv2.imread('Vision/cerclev.png')
     _, w1, h1  = template1.shape[::-1]
     _, w2, h2  = template2.shape[::-1]
     methods = ['cv2.TM_CCOEFF', 'cv2.TM_CCOEFF_NORMED', 'cv2.TM_CCORR','cv2.TM_CCORR_NORMED', 'cv2.TM_SQDIFF', 'cv2.TM_SQDIFF_NORMED']
@@ -35,9 +35,10 @@ def detect_start(image):
     top_left1 = (max_loc1[0], max_loc1[1])
     bottom_right1 = (top_left1[0] + w1, top_left1[1] + h1)
     center1 = (top_left1[0] + w1/2, top_left1[1] + h1/2)
-    print("center1")
-    print(center1)
-   
+    if show:
+        print("center1")
+        print(center1)
+
     
     
 
@@ -46,8 +47,9 @@ def detect_start(image):
     top_left2 = (max_loc2[0], max_loc2[1])
     bottom_right2 = (top_left2[0] + w2, top_left2[1] + h2)
     center2 = (top_left2[0] + w2/2, top_left2[1] + h2/2)
-    print("center2")
-    print(center2)
+    if show:
+        print("center2")
+        print(center2)
 
 
     start_coordinates = ((center1[0] + center2[0])/2, (center1[1] + center2[1])/2 )  #pour etre bien centre#
@@ -55,11 +57,11 @@ def detect_start(image):
     cv2.rectangle(img,top_left2, bottom_right2, (255, 255, 255), -1)  #rect white, draw rectangle 2 opp corner top left and bottom right
     
     
-    return start_coordinates,img,res1,res2
+    return start_coordinates, img, res1, res2, center1, center2
 
 
 def detect_target(image):
-    template = cv2.imread('feuille_rouge.png')
+    template = cv2.imread('Vision/feuille_rouge.png')
     _, w, h  = template.shape[::-1]
     methods = ['cv2.TM_CCOEFF', 'cv2.TM_CCOEFF_NORMED', 'cv2.TM_CCORR','cv2.TM_CCORR_NORMED', 'cv2.TM_SQDIFF', 'cv2.TM_SQDIFF_NORMED']
     
@@ -93,11 +95,42 @@ def detect_obstacle(image):   # pas necessaire coord des obstacles, juste une im
 
     return gray1,contours, hierarchy
     
+def transmit_data(image, show):
+    image = cv2.imread(image)
+    start_coor, img_start, res_start1, res_start2, center1, center2 = detect_start(image, show)
+    target_coor, img_target, res_target = detect_target(img_start)
+    gray2, contours, hierarchy = detect_obstacle(img_target)
+
+    if show:
+        print("contours")
+        print(contours)
+        print("start coord")
+        print(start_coor)
+        print(target_coor)
+        # Converting the original img to black and white
+
+        # Bilateral Filtering
+        bilateral = cv2.bilateralFilter(image, 9, 75, 75)
+        bw_img = cv2.cvtColor(bilateral, cv2.COLOR_BGR2GRAY)
+
+        # print start goal #########################
+
+        fig, (ax1, ax2, ax3) = plt.subplots(1, 3, sharey='row')
+        ax1.imshow(image)
+        ax2.imshow(img_target)
+        ax3.imshow(gray2)
+
+        plt.title("img, start, target")
+
+        plt.show()
+
+    sz_img = np.shape(image)
+    return (center1, center2), target_coor, contours, sz_img
 
 
 
 
-
+"""
 
 #main  
 print("reading")
@@ -107,7 +140,7 @@ print("end reading")
 # image = get_image()
 # print("end reading1")
 
-image = cv2.imread("field.png")
+image = cv2.imread("Vision/field.png")
 start_coor, img_start, res_start1,res_start2 = detect_start(image)
 target_coor, img_target, res_target = detect_target(img_start)
 gray2, contours, hierarchy = detect_obstacle(img_target)
@@ -164,3 +197,4 @@ plt.show()
 print("end")
 
 
+"""
