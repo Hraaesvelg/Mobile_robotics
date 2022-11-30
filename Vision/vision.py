@@ -1,16 +1,18 @@
 from matplotlib import pyplot as plt
 import numpy as np
 import cv2
+import math
+from shapely.geometry import Polygon, Point, LineString
 
-
-def get_image():
-    cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture(0)
+def get_image(cap):
+   
     result, image = cap.read()
 
     if result:
         # save the img
-        cv2.imwrite("cercle.png", image)
-        print("here")
+        cv2.imwrite("image_simple.png", image)
+        #print("here")
     else:
         print("no img read")
 
@@ -41,6 +43,7 @@ def detect_start(image, show):
     top_left2 = (max_loc2[0], max_loc2[1])
     bottom_right2 = (top_left2[0] + w2, top_left2[1] + h2)
     center2 = (top_left2[0] + w2 / 2, top_left2[1] + h2 / 2)
+    
     if show:
         print("center2")
         print(center2)
@@ -79,16 +82,77 @@ def detect_obstacle(image):  # pas necessaire coord des obstacles, juste une img
     filtered_img = cv2.bilateralFilter(img, 3, 75, 75)
     gray = cv2.cvtColor(filtered_img, cv2.COLOR_BGR2GRAY)
     ret, gray1 = cv2.threshold(gray, 50, 255, cv2.THRESH_BINARY)
-    d = 1  # ksize seulement impair
-    sigmacolo = 10
-    sigmaspace = 12
-    gray2 = cv2.bilateralFilter(gray1, d, sigmacolo, sigmaspace)
+    # d = 1  # ksize seulement impair
+    # sigmacolo = 10
+    # sigmaspace = 12
+    # gray2 = cv2.bilateralFilter(gray1, d, sigmacolo, sigmaspace)
 
-    gray3 = cv2.adaptiveThreshold(gray2, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 11, 2)
+    gray3 = cv2.adaptiveThreshold(gray1, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 11, 2)
     contours, hierarchy = cv2.findContours(gray3, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
     return gray3, contours, hierarchy
 
+
+def secure_path(obstacle, margin):
+    """
+    Use this function to add a security margin between the obstacle and the path of the robot
+    :param obstacle:
+    :param margin: the margin by which the polygon is enlarged
+    :return: the enlarged obstacles
+    """
+    obstacle=obstacle.buffer(margin, join_style=2)
+    return obstacle
+
+def draw_increase_obstacle(image,poly):
+    img = image.copy()
+
+    #cree une image identique blanche
+    h = len(img)
+    w = len(img[0])
+
+    for y in range(h):
+        for x in range(w):
+            img[y,x] = [255,255,255]
+
+    #dessine les polygones
+    poly_agr =secure_path(poly, 30)
+
+    print(poly_agr)
+    test  = False  # pour eviter de prendre le premier polygon qui est le contour de limage
+    for i in poly_agr:
+        if test == True:
+            x, y = i.exterior.coords.xy
+            points = [[]]
+            for k in range(len(x)):
+                points.append([int(x[k]),int(y[k])])
+            points = points[1:]
+            pointss = np.array(points)
+            #print(pointss)
+            
+            for j in range(len(x)-1):
+                #print(j)
+                x[j] = math.floor(x[j])
+                y[j] = math.floor(y[j])
+                coord1 = (int(x[j]), int(y[j]))
+                coord2 = (int(x[j+1]),int(y[j+1]))
+                #print(type(x[j]))
+                #print(y[j])
+                
+                cv2.line(img, coord1, coord2, (0,0,0),1)
+            #cv2.drawContours(img, contours, -1, color=(255, 255, 255), thickness=cv2.FILLED)
+            #cv2.fillPoly(img, pts=[pointss], color=(0, 0, 0))
+        test = True
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    Blur=cv2.GaussianBlur(gray,(5,5),1) #apply blur to roi
+    Canny=cv2.Canny(Blur,10,50) #apply canny to roi
+    #Canny = cv2.adaptiveThreshold(Blur, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 11, 2)
+    #ret, Canny = cv2.threshold(Blur, 50, 255, cv2.THRESH_BINARY)
+    #Find my contours
+    contours =cv2.findContours(Canny, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
+    #contours, hierarchy = cv2.findContours(img, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    #je draw tout et findcontours ensuite
+    print(contours[0])
+    return img,contours
 
 def transmit_data(image, show):
     image = cv2.imread(image)
@@ -96,6 +160,9 @@ def transmit_data(image, show):
     target_coor, img_target, res_target = detect_target(img_start)
     gray2, contours, hierarchy = detect_obstacle(img_target)
 
+    #contours = secure_path(contours,30) # agrandissement des obstacles sur l'image
+
+    show = True
     if show:
         print("contours")
         print(contours)
@@ -107,6 +174,9 @@ def transmit_data(image, show):
         # Bilateral Filtering
         bilateral = cv2.bilateralFilter(image, 9, 75, 75)
         bw_img = cv2.cvtColor(bilateral, cv2.COLOR_BGR2GRAY)
+
+   
+       
 
         # print start goal #########################
 

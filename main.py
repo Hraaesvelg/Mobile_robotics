@@ -57,15 +57,7 @@ def obstacles_to_polygons(obst):
     return polygons
 
 
-def secure_path(obstacle, margin):
-    """
-    Use this function to add a security margin between the obstacle and the path of the robot
-    :param obstacle:
-    :param margin: the margin by which the polygon is enlarged
-    :return: the enlarged obstacles
-    """
-    obstacle=obstacle.buffer(margin, join_style=2)
-    return obstacle
+
 
 
 def polygons_2_points(polygons):
@@ -90,12 +82,17 @@ img = "Vision/cercle1.png"
 
 thymio = rbt.RobotNav()
 start, target, obstacles, size = vs.transmit_data(img, False)
-print(obstacles)
+#rint(obstacles)
 
 print('the points found are: ')
 
 poly = obstacles_to_polygons(obstacles)
-poly = secure_path(poly, 30)
+#########
+#image = cv2.imread(img)
+#image,contour_agr = vs.draw_increase_obstacle(image,poly)
+#poly = obstacles_to_polygons(contour_agr)
+##########
+
 points = polygons_2_points(poly)
 
 plot_geometric_data(poly)
