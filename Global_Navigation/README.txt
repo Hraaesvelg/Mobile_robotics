@@ -1,9 +1,8 @@
-fonction de global navigation:
-- entry: - tableau de taille donnée (case libre ou occupé)
-	 - coordonnée du point de depart 
-	 - coordonnée du but
+organisation:
 
-- sortie: chemin a suivre pour atteindre le but
+----Global_Navigation
+-----------global_navigation.py: Fonctions de creation et de recherche du plus court chemin 
+-----------robot.py: Classe du robot 
 
 
-classe 
+----Readme 
