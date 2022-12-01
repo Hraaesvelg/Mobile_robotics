@@ -1,14 +1,16 @@
 """
 Class robot used to accomplish global navigation
 """
-
+# Premade libraries
 import math
-import matplotlib.pyplot as plt
-from filterpy.kalman import KalmanFilter
-from pathfinding.core.diagonal_movement import DiagonalMovement
-from pathfinding.core.grid import Grid
-from pathfinding.finder.a_star import AStarFinder
 import numpy as np
+import cv2
+from matplotlib import pyplot as plt
+
+# Homemade functions
+import Global_Navigation.global_navigation as glb
+import Vision.vision as vs
+import Filtering.KalmanFilter as klm
 
 
 class RobotNav:
@@ -36,10 +38,11 @@ class RobotNav:
         self.start = None
         self.goal = None
         self.next_step = None
-        self.finished = False
+        # state ==> 0 not initialized/ 1=moving to target/ 2=finished
+        self.state = 0
         self.crt_stp = 0
 
-    def initialize_starting_pos(self, cam_data):
+    def initialize_starting_pos(self, cam_data, center):
         """
         Initialise the starting position of the robot
         from camera data
@@ -47,21 +50,14 @@ class RobotNav:
         """
         if cam_data is not None:
             self.theta_img = math.atan2(cam_data[0][1] - cam_data[1][1], cam_data[0][0] - cam_data[1][0])
-            self.x_img = cam_data[0][0]
-            self.y_img = cam_data[0][1]
+            self.x_img = center[0]
+            self.y_img = center[1]
 
             self.x_kalman = self.x_img
             self.y_kalman = self.y_img
             self.theta_kalman = self.theta_img
 
             self.start = (self.x_img, self.y_img)
-            """
-            print(self.x_img, self.y_img)
-            print(math.degrees(self.theta_img))
-            print(cam_data)
-            plt.scatter([cam_data[0][0], cam_data[1][0]], [cam_data[0][1], cam_data[1][1]], c = 'red')
-            plt.show()
-            """
 
     def update_position_cam(self, cam_data):
         """
@@ -73,33 +69,17 @@ class RobotNav:
             self.x_img = cam_data[0][0]
             self.y_img = cam_data[0][1]
 
+    def update_position_kalman(self):
+        x_est, P_est = klm.kalman_filter()
+        self.x_kalman = x_est[0]
+        self.y_kalman = x_est[1]
+
     def set_goal(self, goal):
         """
         Set the goal's coordinates of our robot
         :param goal: (x,y) goal's coordinates
         """
         self.goal = goal
-
-    def find_path_astar(self, matrix, show):
-        """
-        Find the shortest path from the starting point to the goal
-        :param: grid with 1=free, 0 or less = obstacle / starting point/ ending point/ show : enable display of the map
-        :return : list of coordinates corresponding to path
-        """
-
-        grid = Grid(matrix=matrix)
-        start = grid.node(self.start[0], self.start[1])
-        end = grid.node(self.goal[0], self.goal[1])
-
-        finder = AStarFinder(diagonal_movement=DiagonalMovement.never)
-        path, runs = finder.find_path(start, end, grid)
-
-        self.path = path
-
-        if show:
-            print(path)
-            print('operations:', runs, 'path length:', len(path))
-            print(grid.grid_str(path=path, start=start, end=end))
 
     def get_angle2goal(self):
         """
@@ -116,24 +96,55 @@ class RobotNav:
                 beta = -(beta - self.theta_kalman - np.pi)
             else:
                 beta = beta - self.theta_kalman
-
             return beta
 
-    def update_step_respo(self, case_width, tolerance, show):
+    def update_step_respo(self, tolerance, show):
         """
         Determine to which case of the map the robot belong
-        :param case_width: width of the case which path(crt_stp) is the center
+        :param show:
+        :param tolerance:
         :return:
         """
-        next_step = self.path(self.crt_stp + 1)
+        next_step = self.path(self.crt_stp)
         dist = math.sqrt((self.x_kalman - next_step[0]) ^ 2 + (self.y_kalman - next_step[1]) ^ 2)
 
         if dist < tolerance:
             if show:
                 print(self.path(self.crt_stp), self.crt_stp)
             if self.crt_stp == len(self.path) - 1:
-                self.finished = True
+                self.state = 2
             else:
                 self.crt_stp = self.crt_stp + 1
-
         return self.crt_stp
+
+    def initialisation_step(self, img, margin, show=False):
+        self.finished = 0
+        start, target, shapes, size, start_points = vs.transmit_data(img, False, margin)
+        # Initialize the starting position
+        self.initialize_starting_pos(start_points, start)
+        # Set the Goal of our robot
+        self.set_goal(target)
+        # Compute and assign the shortest path
+        shortest = glb.build_vis_graph(shapes, start, target)
+        self.path = shortest
+
+        if show:
+            img = cv2.imread(img)
+            img = glb.draw_path(img, shortest)
+            plt.imshow(img)
+            plt.show()
+
+    def get_crt_step(self):
+        return self.crt_stp
+
+    def increase_step(self):
+        self.crt_stp = self.crt_stp + 1
+
+    def get_state(self):
+        return self.state
+
+    def set_state(self, state):
+        self.state = state
+
+    def avoidance_procedure(self):
+        print('Currently avoiding the obstacle')

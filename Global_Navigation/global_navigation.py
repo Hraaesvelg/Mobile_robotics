@@ -21,7 +21,7 @@ def get_path_lines(image, path):
     return image
 
 
-def plot_geometric_data(map, color = 'Blues', show = True):
+def plot_geometric_data(map, color='Blues', show=True):
     """
     Plot obstacles using geoserie plot function
     :param show:  Boolean to plot the geoserie or not
@@ -108,5 +108,6 @@ def draw_path(img, shortest):
     :return: The modified image
     """
     for i in range(len(shortest ) -1):
-        cv2.line(img, (int(shortest[i].x), int(shortest[i].y)), (int(shortest[ i +1].x) ,int(shortest[ i +1].y)), (255, 0, 0), thickness=5)
+        cv2.line(img, (int(shortest[i].x), int(shortest[i].y)), (int(shortest[ i +1].x), int(shortest[i+1].y)),
+                 (255, 0, 0), thickness=5)
     return img
