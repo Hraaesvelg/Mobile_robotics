@@ -118,6 +118,28 @@ def sort_vertices_clockwise(shapes):  # reoganise les coins dans un ordre sens h
     #print(vertices)
     return vertices
 
+def add_margin(shapes,margin):   #recoit shapes avec les vertices sort clockwise, return les nouveaux points aves la marge
+    for i in range(len(shapes)):
+        for j in range(len(shapes[i])):
+            if j == 0: #premier element soustrait le dernier a u et le second a v
+                u = shapes[i][j]-shapes[i][len(shapes[i])-1]
+                u_norm = u/np.linalg.norm(u)
+                v = shapes[i][j]-shapes[i][j+1]
+                v_norm = v/np.linalg.norm(v)
+                shapes[i][j] = shapes[i][j] + margin*u_norm + margin*v_norm
+            elif j == (len(shapes[i])-1): #dernier element on soustrait le premier a u et l'avant dernier a v
+                u = shapes[i][j] - shapes[i][0]
+                v = shapes[i][j]- shapes[i][j-1]
+                u_norm = u/np.linalg.norm(u)
+                v_norm = v/np.linalg.norm(v) 
+                shapes[i][j] = shapes[i][j] + margin*u_norm + margin*v_norm
+            else : # on soustrait le coin avant a u et le coin dapres a v
+                u = shapes[i][j] - shapes[i][j-1]
+                v = shapes[i][j]- shapes[i][j+1]
+                u_norm = u/np.linalg.norm(u)
+                v_norm = v/np.linalg.norm(v) 
+                shapes[i][j] = shapes[i][j] + margin*u_norm + margin*v_norm
+    return shapes
 
 def secure_path(obstacle, margin):
     """
@@ -141,7 +163,7 @@ def draw_increase_obstacle(image,poly):     ######################## pas appele 
             img[y,x] = [255,255,255]
 
     #dessine les polygones
-    poly_agr =secure_path(poly, 30)
+    poly_agr =secure_path(poly, 10)
 
    
     test  = False  # pour eviter de prendre le premier polygon qui est le contour de limage
@@ -164,7 +186,7 @@ def draw_increase_obstacle(image,poly):     ######################## pas appele 
                 #print(type(x[j]))
                 #print(y[j])
                 
-                cv2.line(img, coord1, coord2, (0,0,0),1)
+                #cv2.line(img, coord1, coord2, (0,0,0),1)
             #cv2.drawContours(img, contours, -1, color=(255, 255, 255), thickness=cv2.FILLED)
             #cv2.fillPoly(img, pts=[pointss], color=(0, 0, 0))
         test = True
@@ -189,8 +211,11 @@ def transmit_data(image, show):
     #print(shapes)
     for i in range(len(shapes)):
         shapes[i] = sort_vertices_clockwise(shapes[i])
-        #print("vertices sort")
-        #print(shapes[i])
+
+    margin = 15
+    shapes = add_margin(shapes,margin)
+        
+    
     #contours = secure_path(contours,30) # agrandissement des obstacles sur l'image
     #print("shape apres")
     #print(shapes)

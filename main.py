@@ -76,10 +76,10 @@ def polygons_2_points(polygons):
     return polygon
 
 
-def build_vis_graph(img,shapes,start,target):
+def build_vis_graph(img,shapes,start,target):   
     startx = str(start[0])
     starty = str(start[1])
-    print(start)
+    
     start = vg.Point(startx,starty)
     target = vg.Point(str(target[0]),str(target[1]))
     vgPoints = []
@@ -91,7 +91,7 @@ def build_vis_graph(img,shapes,start,target):
         temp.append(vg.Point(shapes[i][0][0], shapes[i][0][1]))
         vgPoints.append(temp)
 
-    print(vgPoints)
+    
     g = vg.VisGraph()
     g.build(vgPoints)
     
@@ -102,8 +102,6 @@ def draw_path(img, shortest):
     
     for i in range(len(shortest)-1):
         cv2.line(img, (int(shortest[i].x), int(shortest[i].y)), (int(shortest[i+1].x),int(shortest[i+1].y)), (255, 0, 0), thickness=5)
-        #cv2.line(img,(1,1),(10,10) , (255, 0, 0), thickness=5)
-
     return img
 
 # main
@@ -111,16 +109,16 @@ img = "Vision/cercle1.png"
 
 thymio = rbt.RobotNav()
 start, target, shapes, size = vs.transmit_data(img, False)
-#rint(obstacles)
+
 shortest = build_vis_graph(img,shapes,start,target)
-#img = get_path_lines(img,shortest)
+
 img = cv2.imread("Vision/cercle1.png")
 img = draw_path(img, shortest)
 
 plt.imshow(img)
 plt.show()
 
-print('the points found are: ')
+#print('the points found are: ')
 
 #poly = obstacles_to_polygons(obstacles)
 #########
