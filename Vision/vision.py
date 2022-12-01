@@ -79,18 +79,61 @@ def detect_target(image):
 
 def detect_obstacle(image):  # pas necessaire coord des obstacles, juste une img et on fait path planning dessur
     img = image.copy()
-    filtered_img = cv2.bilateralFilter(img, 3, 75, 75)
-    gray = cv2.cvtColor(filtered_img, cv2.COLOR_BGR2GRAY)
-    ret, gray1 = cv2.threshold(gray, 50, 255, cv2.THRESH_BINARY)
-    # d = 1  # ksize seulement impair
-    # sigmacolo = 10
-    # sigmaspace = 12
-    # gray2 = cv2.bilateralFilter(gray1, d, sigmacolo, sigmaspace)
+    # #filtered_img = cv2.bilateralFilter(img, 3, 75, 75)
+    # gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    # ret, gray1 = cv2.threshold(gray, 50, 255, cv2.THRESH_BINARY)
+    # gray1 = cv2.erode(gray1, (2,2), iterations = 1)
+    # gray1 = cv2.blur(gray1,(5,5))
+   
+    # ret, gray1 = cv2.threshold(gray1, 50, 255, cv2.THRESH_BINARY)
+    # #gray3 = cv2.adaptiveThreshold(gray1, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 11, 2)
+    # contours, hierarchy = cv2.findContours(gray1, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
 
-    gray3 = cv2.adaptiveThreshold(gray1, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 11, 2)
-    contours, hierarchy = cv2.findContours(gray3, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    #return gray1, contours, hierarchy
 
-    return gray3, contours, hierarchy
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    ret,gray = cv2.threshold(gray,80,255,cv2.THRESH_BINARY)
+    #gray = cv2.erode(gray, (2,2), iterations = 1)
+    #gray = cv2.blur(gray,(5,5))
+    #gray = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 11, 2)
+    contours, hierarchy = cv2.findContours(gray,cv2.RETR_TREE,cv2.CHAIN_APPROX_NONE)
+    #print("contours")
+    #print(contours)
+    shapes = []
+    shape_center = []
+    for i in contours:
+        size = cv2.contourArea(i)
+        rect = cv2.minAreaRect(i)
+        if size <100000:
+            gray = np.float32(gray)
+            mask = np.zeros(gray.shape, dtype="uint8")
+            cv2.fillPoly(mask, [i], (255,255,255))
+            dst = cv2.cornerHarris(mask,5,3,0.04)
+            ret, dst = cv2.threshold(dst,0.1*dst.max(),255,0)
+            dst = np.uint8(dst)
+            ret, labels, stats, centroids = cv2.connectedComponentsWithStats(dst)
+            criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 100, 0.001)
+            corners = cv2.cornerSubPix(gray,np.float32(centroids),(5,5),(-1,-1),criteria)
+            #print("corners")
+            #print(len(corners))
+            if len(corners) > 3:
+                shapes.append(corners[1:len(corners)])
+                shape_center.append(np.mean(i, axis=0)[0])
+                #print('Rombus corners: ')
+                #for i in range(1, len(corners)):
+                    #print(corners[i]
+    
+
+    
+    return gray, contours, shapes
+
+def sort_vertices_clockwise(shapes):
+   
+    lowest = min(shapes, key = lambda x: (x[1], x[0]))
+
+    vertices = sorted(shapes, key=lambda x: math.atan2(x[1]-lowest[1], x[0]-lowest[0]) + 2 * math.pi)
+    #print(vertices)
+    return vertices
 
 
 def secure_path(obstacle, margin):
@@ -148,24 +191,31 @@ def draw_increase_obstacle(image,poly):
     #Canny = cv2.adaptiveThreshold(Blur, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 11, 2)
     #ret, Canny = cv2.threshold(Blur, 50, 255, cv2.THRESH_BINARY)
     #Find my contours
-    contours =cv2.findContours(Canny, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
+    contours =cv2.findContours(Canny, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     #contours, hierarchy = cv2.findContours(img, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     #je draw tout et findcontours ensuite
-    print(contours[0])
+    #print(contours[0])
     return img,contours
 
 def transmit_data(image, show):
     image = cv2.imread(image)
     start_coor, img_start, res_start1, res_start2, center1, center2 = detect_start(image, show)
     target_coor, img_target, res_target = detect_target(img_start)
-    gray2, contours, hierarchy = detect_obstacle(img_target)
-
+    gray2, contours, shapes = detect_obstacle(img_target)
+    #print("shape avant")
+    #print(shapes)
+    for i in range(len(shapes)):
+        shapes[i] = sort_vertices_clockwise(shapes[i])
+        #print("vertices sort")
+        #print(shapes[i])
     #contours = secure_path(contours,30) # agrandissement des obstacles sur l'image
-
-    show = True
+    #print("shape apres")
+    #print(shapes)
+    
+    
     if show:
-        print("contours")
-        print(contours)
+        print("shapes")
+        #print(shapes[1])
         print("start coord")
         print(start_coor)
         print(target_coor)
@@ -190,4 +240,4 @@ def transmit_data(image, show):
         plt.show()
 
     sz_img = np.shape(image)
-    return (center1, center2), target_coor, contours, sz_img
+    return (center1, center2), target_coor, shapes, sz_img

@@ -76,49 +76,72 @@ def polygons_2_points(polygons):
     return polygon
 
 
+def build_vis_graph(img,shapes,start,target):
+    vgPoints = []
+
+    for i in range(len(shapes)):
+        temp = []
+        for j in range(len(shapes[i])):
+            temp.append(vg.Point(shapes[i][j][0], shapes[i][j][1]))
+        temp.append(vg.Point(shapes[i][0][0], shapes[i][0][1]))
+        vgPoints.append(temp)
+        
+    print(vgPoints)
+    g = vg.VisGraph()
+    g.build(vgPoints)
+    
+    shortest = g.shortest_path(start, target)
+    return shortest
+
+
 
 # main
 img = "Vision/cercle1.png"
 
 thymio = rbt.RobotNav()
-start, target, obstacles, size = vs.transmit_data(img, False)
+start, target, shapes, size = vs.transmit_data(img, False)
 #rint(obstacles)
+shortest = build_vis_graph(img,shapes,start,target)
+img = get_path_lines(img,shortest)
+
+plt.imshow(img)
+plt.show()
 
 print('the points found are: ')
 
-poly = obstacles_to_polygons(obstacles)
+#poly = obstacles_to_polygons(obstacles)
 #########
 #image = cv2.imread(img)
 #image,contour_agr = vs.draw_increase_obstacle(image,poly)
 #poly = obstacles_to_polygons(contour_agr)
 ##########
 
-points = polygons_2_points(poly)
+#points = polygons_2_points(poly)
 
-plot_geometric_data(poly)
-
-
-start = vg.Point(start[0][0], start[0][1])
-print(start)
-target = vg.Point(target[0], target[1])
-target = vg.Point(350, 244)
-
-g = vg.VisGraph()
-print(g)
-g.build(points)
+#plot_geometric_data(poly)
 
 
-shortest = g.shortest_path(start, target)
-path = shortest
+#start = vg.Point(start[0][0], start[0][1])
+#print(start)
+#target = vg.Point(target[0], target[1])
+#target = vg.Point(350, 244)
+
+#g = vg.VisGraph()
+#print(g)
+#g.build(points)
 
 
-image = cv2.imread(img)
+#shortest = g.shortest_path(start, target)
+#path = shortest
+
+
+#image = cv2.imread(img)
 
 # Window name in which img is displayed
-window_name = 'Image'
+#window_name = 'Image'
 
 
-image = get_path_lines(image, path)
+#image = get_path_lines(image, path)
 # Displaying the img
-cv2.imshow(window_name, image)
-cv2.waitKey(0)
+#cv2.imshow(window_name, image)
+#cv2.waitKey(0)

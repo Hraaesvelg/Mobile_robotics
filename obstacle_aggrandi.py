@@ -21,7 +21,7 @@ def obstacles_to_polygons(obst):
     for obstacle in obst:
         polygon = []
         for point in obstacle:
-            polygon.append([point[0][0], point[0][1]])
+            polygon.append(point)
         poly.append(polygon)
         # test to know if the obstacle can be converted
         if np.size(polygon) > 6:
@@ -36,11 +36,13 @@ def obstacles_to_polygons(obst):
 #vs.get_image(cap)
 
 img = "Vision/cercle1.png"
+#img = cv2.imread(image)
 #vs.transmit_data(img,False)
 #
 
 start, target, obstacle, size = vs.transmit_data(img, False)
 poly = obstacles_to_polygons(obstacle)
+#print(poly)
 
 #print(poly[1])
 #x, y = poly[1].exterior.coords.xy
@@ -49,14 +51,14 @@ poly = obstacles_to_polygons(obstacle)
 #print(y)
 #print(len(poly[1]))
 
-image = cv2.imread(img)
-img_margin, contours = vs.draw_increase_obstacle(image, poly)
+#image = cv2.imread(img)
+#img_margin, contours = vs.draw_increase_obstacle(image, poly)
 
 #print(contours_agr)
-fig, (ax1, ax2) = plt.subplots(1, 2, sharey='row')
-ax1.imshow(img_margin)
+#fig, (ax1, ax2) = plt.subplots(1, 2, sharey='row')
+#ax1.imshow(img_margin)
 
-ax2.imshow(img_margin)
+#ax2.imshow(img_margin)
 
 
-plt.show()
+#plt.show()
