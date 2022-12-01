@@ -77,28 +77,13 @@ def detect_target(image):
     return target_coordinates, img, res
 
 
-def detect_obstacle(image):  # pas necessaire coord des obstacles, juste une img et on fait path planning dessur
+def detect_obstacle(image):  # detect les contours, puis recupere les coins de chaque polygone
     img = image.copy()
-    # #filtered_img = cv2.bilateralFilter(img, 3, 75, 75)
-    # gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    # ret, gray1 = cv2.threshold(gray, 50, 255, cv2.THRESH_BINARY)
-    # gray1 = cv2.erode(gray1, (2,2), iterations = 1)
-    # gray1 = cv2.blur(gray1,(5,5))
-   
-    # ret, gray1 = cv2.threshold(gray1, 50, 255, cv2.THRESH_BINARY)
-    # #gray3 = cv2.adaptiveThreshold(gray1, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 11, 2)
-    # contours, hierarchy = cv2.findContours(gray1, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
-
-    #return gray1, contours, hierarchy
 
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     ret,gray = cv2.threshold(gray,80,255,cv2.THRESH_BINARY)
-    #gray = cv2.erode(gray, (2,2), iterations = 1)
-    #gray = cv2.blur(gray,(5,5))
-    #gray = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 11, 2)
     contours, hierarchy = cv2.findContours(gray,cv2.RETR_TREE,cv2.CHAIN_APPROX_NONE)
-    #print("contours")
-    #print(contours)
+
     shapes = []
     shape_center = []
     for i in contours:
@@ -123,11 +108,9 @@ def detect_obstacle(image):  # pas necessaire coord des obstacles, juste une img
                 #for i in range(1, len(corners)):
                     #print(corners[i]
     
-
-    
     return gray, contours, shapes
 
-def sort_vertices_clockwise(shapes):
+def sort_vertices_clockwise(shapes):  # reoganise les coins dans un ordre sens horaire
    
     lowest = min(shapes, key = lambda x: (x[1], x[0]))
 
@@ -146,7 +129,7 @@ def secure_path(obstacle, margin):
     obstacle=obstacle.buffer(margin, join_style=2)
     return obstacle
 
-def draw_increase_obstacle(image,poly):
+def draw_increase_obstacle(image,poly):     ######################## pas appele pour linstant voir plus tard
     img = image.copy()
 
     #cree une image identique blanche
@@ -160,7 +143,7 @@ def draw_increase_obstacle(image,poly):
     #dessine les polygones
     poly_agr =secure_path(poly, 30)
 
-    print(poly_agr)
+   
     test  = False  # pour eviter de prendre le premier polygon qui est le contour de limage
     for i in poly_agr:
         if test == True:
@@ -212,7 +195,7 @@ def transmit_data(image, show):
     #print("shape apres")
     #print(shapes)
     
-    
+
     if show:
         print("shapes")
         #print(shapes[1])
@@ -240,4 +223,4 @@ def transmit_data(image, show):
         plt.show()
 
     sz_img = np.shape(image)
-    return (center1, center2), target_coor, shapes, sz_img
+    return start_coor, target_coor, shapes, sz_img
