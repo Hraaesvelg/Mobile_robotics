@@ -87,7 +87,7 @@ class RobotNav:
         :return: beta the angle btw goal/crt orientation
         """
         if self.start is not None and self.goal is not None:
-            goal = self.path(self.crt_stp + 1)
+            goal = self.path[self.crt_stp + 1]
             beta = math.atan2(goal[1] - self.y_kalman, goal[0] - self.x_kalman)
 
             if beta - self.theta_kalman < -np.pi:

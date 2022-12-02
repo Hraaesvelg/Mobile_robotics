@@ -15,4 +15,4 @@ def detect_obstacle():
     return False
 
 def stop_thymio():
-    return 'robot stoped'
+    print( 'robot stoped' )

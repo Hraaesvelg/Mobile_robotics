@@ -1,5 +1,6 @@
 # Premade libraries
 import cv2
+import time
 from matplotlib import pyplot as plt
 
 # Homemade functions
@@ -19,15 +20,30 @@ simulation = 1
 thymio = rbt.RobotNav()
 # Start the video capture
 cap = cv2.VideoCapture(0)
-
+cursor = 0
 while cap.isOpened():
+    ret, frame = cap.read()
     if thymio.get_state() == 0:
         thymio.initialisation_step(img, 50, True)
         thymio.increase_step()
         thymio.set_state(1)
     elif thymio.get_state() == 1:
         # We use the position determined by the camera
-        if vs.get_image(cap) is not None:
+        img = vs.get_image(cap)
+        print('curent step is ' + str(cursor))
+        time.sleep(0.1)
+        if cursor > 20:
+            thymio.set_state(2)
+        cursor = cursor + 1
+
+        position, st = vs.detect_start(frame, False, False)
+        print(position)
+        # thymio.update_position_cam(position)
+        glb.draw_thymio(frame, position)
+        cv2.imshow('video', frame)
+
+        """
+        if img is not None:
             position = vs.detect_start(img, False, False)
             thymio.update_position_cam(position)
         # Without data from the camera we apply a kalman filter
@@ -45,7 +61,10 @@ while cap.isOpened():
 
         ctrl.advance(50, 1)
         thymio.update_step_respo()
-
+    """
     elif thymio.get_state() == 2:
         ctrl.stop_thymio()
+        break
 
+
+cap.release

@@ -60,7 +60,7 @@ def detect_start(image, show=False, begin = True):
     if begin:
         return start_coordinates, img, res1, res2, center1, center2
     else:
-        return (center1, center2)
+        return start_coordinates, (center1, center2)
 
 
 def detect_target(image):
