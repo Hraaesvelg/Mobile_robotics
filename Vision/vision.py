@@ -4,7 +4,7 @@ import cv2
 import math
 from shapely.geometry import Polygon, Point, LineString
 
-cap = cv2.VideoCapture(0)
+#cap = cv2.VideoCapture(0)
 
 
 def get_image(cap):
@@ -12,7 +12,7 @@ def get_image(cap):
 
     if result:
         # save the img
-        cv2.imwrite("image_simple.png", image)
+        cv2.imwrite("premier_test.png", image)
         # print("here")
         return image
     else:
@@ -23,11 +23,13 @@ def get_image(cap):
 def detect_start(image, show=False, begin = True):
     template1 = cv2.imread('Vision/cerclebleu.png')
     template2 = cv2.imread('Vision/cerclevert.png')
+    #template1 = cv2.imread('cerclebleu.png')
+    #template2 = cv2.imread('cerclevert.png')
     _, w1, h1 = template1.shape[::-1]
     _, w2, h2 = template2.shape[::-1]
     methods = ['cv2.TM_CCOEFF', 'cv2.TM_CCOEFF_NORMED', 'cv2.TM_CCORR', 'cv2.TM_CCORR_NORMED', 'cv2.TM_SQDIFF',
                'cv2.TM_SQDIFF_NORMED']
-
+    
     img = image.copy()
     # Apply template Matching
     res1 = cv2.matchTemplate(img, template1, cv2.TM_CCORR_NORMED)
@@ -63,6 +65,7 @@ def detect_start(image, show=False, begin = True):
 
 def detect_target(image):
     template = cv2.imread('Vision/feuille_rouge.png')
+    #template = cv2.imread('feuille_rouge.png')
     _, w, h = template.shape[::-1]
     methods = ['cv2.TM_CCOEFF', 'cv2.TM_CCOEFF_NORMED', 'cv2.TM_CCORR', 'cv2.TM_CCORR_NORMED', 'cv2.TM_SQDIFF',
                'cv2.TM_SQDIFF_NORMED']
@@ -85,7 +88,7 @@ def detect_obstacle(image):  # detect les contours, puis recupere les coins de c
     img = image.copy()
 
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    ret, gray = cv2.threshold(gray, 80, 255, cv2.THRESH_BINARY)
+    ret, gray = cv2.threshold(gray, 40, 255, cv2.THRESH_BINARY)
     contours, hierarchy = cv2.findContours(gray, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
 
     shapes = []
@@ -249,3 +252,6 @@ def transmit_data(image, show, margin):
     sz_img = np.shape(image)
     return start_coor, target_coor, shapes, sz_img, (center1,center2)
 
+#img = get_image(cap)
+#img = "premier_test.png"
+#start_coor, target_coor, shapes, sz_img, (center1,center2) = transmit_data(img,True,10)

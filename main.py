@@ -10,7 +10,8 @@ import Motion_Control.thymio_control as ctrl
 
 # Main
 # Data
-img = "Vision/cercle1.png"
+cap = cv2.VideoCapture(0)
+img = "Vision/premier_test.png"
 margin = 15
 simulation = 1
 # Initialisation
@@ -21,7 +22,7 @@ cap = cv2.VideoCapture(0)
 
 while cap.isOpened():
     if thymio.get_state() == 0:
-        thymio.initialisation_step(img, 25, True)
+        thymio.initialisation_step(img, 50, True)
         thymio.increase_step()
         thymio.set_state(1)
     elif thymio.get_state() == 1:
