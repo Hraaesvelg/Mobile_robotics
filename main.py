@@ -12,8 +12,9 @@ import Motion_Control.thymio_control as ctrl
 # Main
 # Data
 cap = cv2.VideoCapture(0)
-img = "Vision/premier_test.png"
-margin = 15
+img = vs.get_image(cap)
+img = "Vision/test_2.png"
+margin = 20
 simulation = 1
 # Initialisation
 # Create an instance of our robot
@@ -24,7 +25,7 @@ cursor = 0
 while cap.isOpened():
     ret, frame = cap.read()
     if thymio.get_state() == 0:
-        thymio.initialisation_step(img, 50, True)
+        thymio.initialisation_step(img, margin, True)
         thymio.increase_step()
         thymio.set_state(1)
     elif thymio.get_state() == 1:

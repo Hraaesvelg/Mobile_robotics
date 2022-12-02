@@ -12,7 +12,7 @@ def get_image(cap):
 
     if result:
         # save the img
-        cv2.imwrite("premier_test.png", image)
+        cv2.imwrite("Vision/test_2.png", image)
         # print("here")
         return image
     else:
