@@ -129,7 +129,7 @@ class RobotNav:
         self.path = shortest
 
         if show:
-            img = cv2.imread(img)
+            #img = cv2.imread(img)
             img = glb.draw_path(img, shortest)
             plt.imshow(img)
             plt.show()
@@ -148,3 +148,7 @@ class RobotNav:
 
     def avoidance_procedure(self):
         print('Currently avoiding the obstacle')
+        return 0
+
+    def get_path(self):
+        return self.path

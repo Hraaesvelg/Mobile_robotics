@@ -114,6 +114,5 @@ def draw_path(img, shortest):
 
 
 def draw_thymio(img, position):
-    print(type(int(position[0])))
-    cv2.circle(img, (int(position[0]), int(position[1])), int(3), (0, 0, 255), 2)
+    return cv2.circle(img, (int(position[0]), int(position[1])), int(3), (0, 0, 255), 2)
 

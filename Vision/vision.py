@@ -215,7 +215,7 @@ def draw_increase_obstacle(image, poly):  ######################## pas appele po
 
 
 def transmit_data(image, show, margin):
-    image = cv2.imread(image)
+    # image = cv2.imread(image)
     start_coor, img_start, res_start1, res_start2, center1, center2 = detect_start(image, show)
     target_coor, img_target, res_target = detect_target(img_start)
     gray2, contours, shapes = detect_obstacle(img_target)
