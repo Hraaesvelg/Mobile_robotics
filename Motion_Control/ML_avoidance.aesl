@@ -1,0 +1,120 @@
+<!DOCTYPE aesl-source>
+<network>
+
+
+<!--list of global events-->
+
+
+<!--node Thymio 552-->
+<node nodeId="{fbffd2bf-1e6b-4546-b240-60eed16c9df4}" name="Thymio 552"><![CDATA[# Thymio-II program: Hebbian learning for obstacle avoidance
+# Copyright 2017 by Francesco Mondada and Moti Ben-Ari
+# CreativeCommons BY-SA 3.0
+
+# Initially, the robot does not move or moves forward very slowly
+# To train the robot to move forwards when an object is not
+#   detected, touch the center button
+# When the center / rear / left / right sensor detects your
+#   finger, touch the back / front / right /left button
+# Do the training one or more times
+# The robot will update the ANN weights
+#   and avoid an obstacle or move forwards if no obstacle
+
+# Since all buttons are used, black paper or tape pushed
+#   under a ground sensor starts and stops the robot
+# Top leds indicate on or off
+
+# Neuron inputs (7 IR sensors) and outputs
+var x[7]
+var y[2]
+
+# Scale factors for sensors, outputs and motors
+var sensor_scale   = 100
+var output_scale   =  20
+var motor_scale    =  15
+
+# Constant input to move forwards
+var constant_input =  25
+
+# Threshold for start/stop with ground sensors
+var start_stop_threshold = 300
+
+# Left and right weights
+var w_left[7]
+var w_right[7]
+
+# Learning rate
+var alpha = 1
+
+# Speed increment for each learning episode
+var speed = 10
+
+# The desired output for each button: +/-speed
+var y_left
+var y_right
+
+# Loop index
+var i
+
+# Time period (millisecconds) to compute motor outputs from inputs
+timer.period[0] = 100
+
+# Start in off state and not moving
+call leds.top(0,0,0)
+motor.left.target  = 0
+motor.right.target = 0
+
+# Change weights according to Hebbian rule
+sub change_weights
+    for i in 0:6 do
+        w_left[i]  = w_left[i]  + (alpha*y_left*x[i])  / output_scale
+        w_right[i] = w_right[i] + (alpha*y_right*x[i]) / output_scale
+    end
+
+# For each button set y_left, y_right and change weights, center erase them
+onevent button.center
+    for i in 0:6 do
+        w_left[i]  = 0
+        w_right[i] = 0
+    end
+
+onevent button.left
+  y_left  = -speed
+  y_right = speed
+  callsub change_weights
+
+onevent button.right
+  y_left  = speed
+  y_right = -speed
+  callsub change_weights
+
+onevent button.forward
+  y_left  = speed
+  y_right = speed
+  callsub change_weights
+
+onevent button.backward
+  y_left  = -speed
+  y_right = -speed
+  callsub change_weights
+
+# Timer event
+onevent timer0
+   # Read and scale inputs
+   for i in 0:6 do
+     x[i]=prox.horizontal[i]/sensor_scale
+   end
+
+   # Compute dot product of inputs and weights
+   y[0] = 0
+   y[1] = 0
+   for i in 0:6 do
+    y[0] = y[0] + x[i]*w_left[i]
+    y[1] = y[1] + x[i]*w_right[i]
+   end
+
+  # Scale and set motor powers
+  motor.left.target  = y[0] / motor_scale
+  motor.right.target = y[1] / motor_scale]]></node>
+
+
+</network>
