@@ -1,5 +1,6 @@
 from tdmclient import ClientAsync, aw
 import numpy as np
+import matplotlib as math
 
 '''thymio dimensions'''
 r = 22  # mm
@@ -79,13 +80,22 @@ def mov_simplified(pos, theta, target, node):
         right_speed = int(l*alpha)
         set_motor_speed(right_speed, left_speed, node)
         return 0
+<<<<<<< HEAD
     elif rho> thres_arrived :
+=======
+    elif rho>thres_arrived :
+>>>>>>> origin/main
         set_motor_speed(v_min, v_min, node)
         return 0
     else:
         stop_motors(node)
         return 1
 
+<<<<<<< HEAD
+=======
+mov_simplified(np.array[0,0],math.pi, np.array[1,1], node)
+
+>>>>>>> origin/main
 def astolfi(pos, theta, target, node):
     state = 0  # this functions is called recursivly untill state=1 i.e. the thymio has arrived
     delta_pos = (int(target.x) - pos[0], int(target.y) - pos[1])
