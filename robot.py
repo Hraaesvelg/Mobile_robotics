@@ -66,19 +66,25 @@ class RobotNav:
         Update robot's position from camera data
         :param cam_data: ((x_center, y_center),(x_front, y_front)): allows us to  vectorize Thymio position
         """
+        #print("avant")
+        #print(cam_data)
         if cam_data is not None:
-            self.theta = math.atan2(cam_data[0][1] - cam_data[1][1], cam_data[0][0] - cam_data[1][0])
-            self.x = cam_data[0][0]
-            self.y = cam_data[0][1]
+             self.theta = math.atan2(cam_data[0][1] - cam_data[1][1], cam_data[0][0] - cam_data[1][0])
+             self.x = cam_data[0][0]
+             self.y = cam_data[0][1]
+             #print("apres")
+             #print(cam_data)
+        
+
 
     #def update_position_kalman(self):
         #x_est, P_est = klm.kalman_filter()
         #self.x_kalman = x_est[0]
         #self.y_kalman = x_est[1]
 
-        self.theta = self.theta_kalman
-        self.x = self.x_kalman
-        self.y = self.y_kalman
+        # self.theta = self.theta_kalman
+        # self.x = self.x_kalman
+        # self.y = self.y_kalman
 
     def set_goal(self, goal):
         """
@@ -164,6 +170,4 @@ class RobotNav:
     def get_geometry(self):
         return self.x, self.y, self.theta
 
-    def test(self):
-        print('Test function')
-        return self.x
+
