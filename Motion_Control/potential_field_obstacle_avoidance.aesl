@@ -1,0 +1,31 @@
+<!DOCTYPE aesl-source>
+<network>
+
+
+<!--list of global events-->
+
+
+<!--node Thymio 552-->
+<node name="Thymio 552" nodeId="{fbffd2bf-1e6b-4546-b240-60eed16c9df4}"><![CDATA[var speed0 = 100       # nominal speed
+var speedGain = 2      # gain used with ground gradient
+var obstThrL = 10      # low obstacle threshold to switch state 1->0
+var obstThrH = 20      # high obstacle threshold to switch state 0->1
+var obstSpeedGain = 5  # /100 (actual gain: 5/100=0.05)
+
+var state = 0          # 0=gradient, 1=obstacle avoidance
+var diffDelta          # difference between ground sensors
+var obst[2]            # measurements from left and right prox sensors
+
+timer.period[0] = 10   # 10ms sampling time
+
+onevent timer0
+  # acquisition from ground sensor for going toward the goal
+  diffDelta = prox.ground.delta[1] - prox.ground.delta[0]
+  # acquisition from the proximity sensors to detect obstacles
+  obst = [prox.horizontal[0], prox.horizontal[4]]
+  # goal tracking: turn toward the goal
+  motor.left.target = speed0 - speedGain * diffDelta - obstSpeedGain * (obst[1] / 100) + obstSpeedGain * (obst[0] / 100)
+  motor.right.target = speed0 + speedGain * diffDelta - obstSpeedGain * (obst[0] / 100) + obstSpeedGain * (obst[1] / 100)]]></node>
+
+
+</network>
