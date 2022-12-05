@@ -35,6 +35,7 @@ while cap.isOpened():
         frame = glb.draw_path(frame, thymio.get_path())
         # We update the position of the robot
         if position is not None:
+            thymio.test()
             thymio.update_position_cam(st)
         else:
             thymio.update_position_kalman()

@@ -125,11 +125,7 @@ class RobotNav:
         return self.crt_stp
 
     def initialisation_step(self, img, margin, show=False):
-<<<<<<< HEAD:robot.py
-        self.finished = 0
-=======
         self.state = 0
->>>>>>> origin/main:Global_Navigation/robot.py
         start, target, shapes, size, start_points = vs.transmit_data(img, show, margin)
         # Initialize the starting position
         self.initialize_starting_pos(start_points, start)
@@ -168,3 +164,6 @@ class RobotNav:
     def get_geometry(self):
         return self.x, self.y, self.theta
 
+    def test(self):
+        print('Test function')
+        return self.x
