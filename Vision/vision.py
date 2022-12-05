@@ -227,11 +227,11 @@ def transmit_data(image, show, margin):
     shapes = add_margin(shapes, margin)
 
     if show:
-        print("shapes")
+        #print("shapes")
         # print(shapes[1])
-        print("start coord")
-        print(start_coor)
-        print(target_coor)
+        #print("start coord")
+        #print(start_coor)
+        #print(target_coor)
         # Converting the original img to black and white
 
         # Bilateral Filtering
