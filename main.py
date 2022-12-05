@@ -11,7 +11,7 @@ import Motion_Control.thymio_control as ctrl
 
 # Main
 # Data
-margin = 50
+margin = 10
 
 # Initialisation
 # Create an instance of our robot

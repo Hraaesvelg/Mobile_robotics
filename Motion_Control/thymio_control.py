@@ -6,14 +6,14 @@ r = 22  # mm
 l = 48  # mm
 
 '''controller constants to tune accordingly'''
-kp = 25  # >0
-ka = 50  # > kp
+kp = 15  # >0
+ka = 20  # > kp
 kb = -0.0001  # <0
 
 '''speed limits and sensors thresholds to tune accordingly'''
-v_max = 1000
-v_min = 100
-thres_arrived = 10
+v_max = 100
+v_min = 50
+thres_arrived = 50
 
 
 def thym_motors(right, left):
