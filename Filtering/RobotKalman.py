@@ -36,6 +36,7 @@ class RobotNav:
         #Coordinates of the two circles on the Thymio
         self.center_front = None
         self.center_back = None
+        self.orientation = None
 
         #Values returned by the kalman filter
         self.x_kalman = None
@@ -71,7 +72,7 @@ class RobotNav:
 
         self.center_front, self.center_back = vs.detect_start(img, show=False, begin=False)[0], vs.detect_start(img, show=False,
                                                                                                                 begin=False)[1]
-        #thymioCoordinates = (self.center_front + self.center_back) / 2
+        thymioCoordinates = (self.center_front + self.center_back) / 2
         speed = (ctrl.get_motors_speed(self.node, self.client)[0] + ctrl.get_motors_speed(self.node, self.client)[1]) / 2 * SPEED_COEFF
 
         '''Il nous faut une fonction qui vérifie que thymio a été détecté sur l'image / la vidéo'''
@@ -81,27 +82,33 @@ class RobotNav:
             if front:
                 x = self.center_front[0]
                 y = self.center_front[1]
+                vx = speed * math.cos(self.theta_img)
+                vy = speed * math.sin(self.theta_img)
+                return x, y, vx, vy, Detection
             else: 
                 x = self.center_back[0]
                 y = self.center_back[1]
-
-            self.theta_img = self.compute_orientation(img)
-
-            vx = speed * math.cos(self.theta_img)
-            vy = speed * math.sin(self.theta_img)
+                return x, y
 
         else:
             Detection = False
 
         return x, y, vx, vy, Detection
 
+    def set_last_position(front, back):
+        self.center_front = front
+        self.center_back = back 
+        self.compute_orientation()
+        return 0
+        
+    
     # Return orientation compared to x-axis between pi and -pi
-    def compute_orientation(self, img):
+    def compute_orientation(self):
         x = self.center_front[0] - self.center_back[0]
         y = self.center_front[1] - self.center_back[1]
 
         orientation = math.atan2(y, x)
-        #self.set_last_orientation(orientation)
+        self.set_last_orientation(orientation)
 
         return orientation
 
@@ -124,9 +131,10 @@ class RobotNav:
                 return speed - MAX_RAW_MOTOR_SPEED
         except (IndexError, KeyError):
             return 0
+    
 
     def set_last_orientation(self, orientation):
-        self.theta_img = orientation
+        self.orientation = orientation
 
     #def set_motor_right_speed(self, speed):
     #    try:
