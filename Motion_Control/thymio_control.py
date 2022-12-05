@@ -7,14 +7,14 @@ r = 22  # mm
 l = 48  # mm
 
 '''controller constants to tune accordingly'''
-kp = 15  # >0
-ka = 20  # > kp
-kb = -0.0001  # <0
+kp = 10  # >0
+ka = 15  # > kp
+kb = -1  # <0
 
 '''speed limits and sensors thresholds to tune accordingly'''
 v_max = 1000
 v_min = 100
-thres_arrived = 10
+thres_arrived = 50
 alpha_thres = 2
 
 
@@ -89,7 +89,7 @@ def mov_simplified(pos, theta, target, node):
 
 def astolfi(pos, theta, target, node):
     state = 0  # this functions is called recursivly untill state=1 i.e. the thymio has arrived
-    delta_pos = (int(target.x) - pos[0], int(target.y) - pos[1])
+    delta_pos = [target[0] - pos[0], -(target[1] - pos[1])]
     rho = np.linalg.norm(delta_pos)
     alpha = -theta + np.arctan2(delta_pos[1], delta_pos[0])
     beta = -theta - alpha
@@ -101,9 +101,9 @@ def astolfi(pos, theta, target, node):
     else:
         v = 0
         state = 1
-    left_speed = int(v - l * omega)
-    right_speed = int(v + l * omega)
-    set_motor_speed(right_speed, left_speed, node)
+    left_speed = v - l * omega
+    right_speed = v + l * omega
+    set_motor_speed(int(right_speed), int(left_speed), node)
     return state
 
 
