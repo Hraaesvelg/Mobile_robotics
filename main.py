@@ -35,7 +35,6 @@ while cap.isOpened():
         frame = glb.draw_path(frame, thymio.get_path())
         # We update the position of the robot
         if position is not None:
-            thymio.test()
             thymio.update_position_cam(st)
         else:
             thymio.update_position_kalman()
@@ -47,9 +46,9 @@ while cap.isOpened():
         geometry = thymio.get_geometry()
         step = thymio.get_crt_step()
         path = thymio.get_path()
-        ctrl.astolfi((geometry[0], geometry[1]), geometry[2], path[step], node)
+        #ctrl.astolfi((geometry[0], geometry[1]), geometry[2], path[step], node)
         print(path[step])
-        thymio.update_step_respo()
+        thymio.update_step_respo(30, False)
 
     elif thymio.get_state() == 2:
         ctrl.stop_motors(node)
