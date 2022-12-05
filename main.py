@@ -18,7 +18,7 @@ margin = 30
 thymio = rbt.RobotNav()
 node = 0
 # Start the video capture
-cap = cv2.VideoCapture(1)
+cap = cv2.VideoCapture(0)
 
 while cap.isOpened():
     ret, frame = cap.read()
