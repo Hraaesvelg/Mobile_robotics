@@ -8,9 +8,10 @@ import cv2
 from matplotlib import pyplot as plt
 
 # Homemade functions
+
 import Global_Navigation.global_navigation as glb
 import Vision.vision as vs
-import Filtering.KalmanFilter as klm
+#import Filtering.KalmanFilter as klm
 
 
 class RobotNav:
@@ -70,10 +71,10 @@ class RobotNav:
             self.x = cam_data[0][0]
             self.y = cam_data[0][1]
 
-    def update_position_kalman(self):
-        x_est, P_est = klm.kalman_filter()
-        self.x_kalman = x_est[0]
-        self.y_kalman = x_est[1]
+    #def update_position_kalman(self):
+        #x_est, P_est = klm.kalman_filter()
+        #self.x_kalman = x_est[0]
+        #self.y_kalman = x_est[1]
 
         self.theta = self.theta_kalman
         self.x = self.x_kalman
@@ -124,7 +125,11 @@ class RobotNav:
         return self.crt_stp
 
     def initialisation_step(self, img, margin, show=False):
+<<<<<<< HEAD:robot.py
+        self.finished = 0
+=======
         self.state = 0
+>>>>>>> origin/main:Global_Navigation/robot.py
         start, target, shapes, size, start_points = vs.transmit_data(img, show, margin)
         # Initialize the starting position
         self.initialize_starting_pos(start_points, start)
