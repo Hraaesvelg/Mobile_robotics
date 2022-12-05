@@ -170,5 +170,4 @@ class RobotNav:
     def get_geometry(self):
         return self.x, self.y, self.theta
 
-    def test(self, txt):
-        return(txt)
+
