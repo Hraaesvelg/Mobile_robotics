@@ -29,9 +29,9 @@ class RobotNav:
         self.y_kalman = None
         self.theta_kalman = None
 
-        self.x_img = None
-        self.y_img = None
-        self.theta_img = None
+        self.x = None
+        self.y = None
+        self.theta = None
 
         # Global navigation
         self.path = None
@@ -46,18 +46,19 @@ class RobotNav:
         """
         Initialise the starting position of the robot
         from camera data
+        :param center:
         :param cam_data: ((x_center, y_center),(x_front, y_front)): allows us to  vectorize Thymio position
         """
         if cam_data is not None:
-            self.theta_img = math.atan2(cam_data[0][1] - cam_data[1][1], cam_data[0][0] - cam_data[1][0])
-            self.x_img = center[0]
-            self.y_img = center[1]
+            self.theta = math.atan2(cam_data[0][1] - cam_data[1][1], cam_data[0][0] - cam_data[1][0])
+            self.x = center[0]
+            self.y = center[1]
 
-            self.x_kalman = self.x_img
-            self.y_kalman = self.y_img
-            self.theta_kalman = self.theta_img
+            self.x_kalman = self.x
+            self.y_kalman = self.y
+            self.theta_kalman = self.theta
 
-            self.start = (self.x_img, self.y_img)
+            self.start = (self.x, self.y)
 
     def update_position_cam(self, cam_data):
         """
@@ -65,14 +66,18 @@ class RobotNav:
         :param cam_data: ((x_center, y_center),(x_front, y_front)): allows us to  vectorize Thymio position
         """
         if cam_data is not None:
-            self.theta_img = math.atan2(cam_data[0][1] - cam_data[1][1], cam_data[0][0] - cam_data[1][0])
-            self.x_img = cam_data[0][0]
-            self.y_img = cam_data[0][1]
+            self.theta = math.atan2(cam_data[0][1] - cam_data[1][1], cam_data[0][0] - cam_data[1][0])
+            self.x = cam_data[0][0]
+            self.y = cam_data[0][1]
 
     def update_position_kalman(self):
         x_est, P_est = klm.kalman_filter()
         self.x_kalman = x_est[0]
         self.y_kalman = x_est[1]
+
+        self.theta = self.theta_kalman
+        self.x = self.x_kalman
+        self.y = self.y_kalman
 
     def set_goal(self, goal):
         """
@@ -105,21 +110,22 @@ class RobotNav:
         :param tolerance:
         :return:
         """
-        next_step = self.path(self.crt_stp)
-        dist = math.sqrt((self.x_kalman - next_step[0]) ^ 2 + (self.y_kalman - next_step[1]) ^ 2)
+        next_step = self.path[self.crt_stp]
+        dist = math.sqrt(int(self.x - next_step.x) ^ 2 + int(self.y - next_step.y) ^ 2)
 
         if dist < tolerance:
             if show:
                 print(self.path(self.crt_stp), self.crt_stp)
             if self.crt_stp == len(self.path) - 1:
-                self.state = 2
+                self.set_state(2)
             else:
-                self.crt_stp = self.crt_stp + 1
+                self.set_state(1)
+                self.increase_step()
         return self.crt_stp
 
     def initialisation_step(self, img, margin, show=False):
-        self.finished = 0
-        start, target, shapes, size, start_points = vs.transmit_data(img, False, margin)
+        self.state = 0
+        start, target, shapes, size, start_points = vs.transmit_data(img, show, margin)
         # Initialize the starting position
         self.initialize_starting_pos(start_points, start)
         # Set the Goal of our robot
@@ -144,6 +150,7 @@ class RobotNav:
         return self.state
 
     def set_state(self, state):
+        print('state updated')
         self.state = state
 
     def avoidance_procedure(self):
@@ -152,3 +159,7 @@ class RobotNav:
 
     def get_path(self):
         return self.path
+
+    def get_geometry(self):
+        return self.x, self.y, self.theta
+

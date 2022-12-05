@@ -2,18 +2,18 @@ from tdmclient import ClientAsync, aw
 import numpy as np
 
 '''thymio dimensions'''
-r=22 #mm
-l=48 #mm
+r = 22  # mm
+l = 48  # mm
 
 '''controller constants to tune accordingly'''
-kp=25   #>0
-ka=50  # > kp
-kb=-0.0001 #<0
+kp = 25  # >0
+ka = 50  # > kp
+kb = -0.0001  # <0
 
 '''speed limits and sensors thresholds to tune accordingly'''
-v_max=1000
-v_min=100
-thres_arrived=10
+v_max = 1000
+v_min = 100
+thres_arrived = 10
 
 
 def thym_motors(right, left):
@@ -68,21 +68,26 @@ def get_prox_sensors(node, client):
     aw(client.sleep(0.05))
     return node.v.prox.horizontal
 
-def astolfi(pos, teta, target, node):
-    state=0 #this functions is called recursivly untill state=1 i.e. the thymio has arrived
-    delta_pos=np.substract(target,pos)
-    rho=np.linal.norm(delta_pos)
-    alpha=-teta + np.arctan2(delta_pos[1],delta_pos[0])
-    beta=-teta-alpha
-    omega=ka*alpha+kb*beta
-    if rho>thres_arrived:
-        v=kp*rho
-        if v>v_max: v=v_max
-        if v<v_min: v=v_min
+
+def astolfi(pos, theta, target, node):
+    state = 0  # this functions is called recursivly untill state=1 i.e. the thymio has arrived
+    delta_pos = (int(target.x) - pos[0], int(target.y) - pos[1])
+    rho = np.linalg.norm(delta_pos)
+    alpha = -theta + np.arctan2(delta_pos[1], delta_pos[0])
+    beta = -theta - alpha
+    omega = ka * alpha + kb * beta
+    if rho > thres_arrived:
+        v = kp * rho
+        if v > v_max: v = v_max
+        if v < v_min: v = v_min
     else:
-        v=0
-        state=1
-    left_speed=int(v-l*omega)
-    right_speed=int(v+l*omega)
+        v = 0
+        state = 1
+    left_speed = int(v - l * omega)
+    right_speed = int(v + l * omega)
     set_motor_speed(right_speed, left_speed, node)
     return state
+
+
+def leds_blink(node):
+    return 0
