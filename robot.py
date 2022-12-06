@@ -33,8 +33,8 @@ class RobotNav:
         self.x = None
         self.y = None
         self.theta = None
-        self.real_path = None
-        self.real_path_karman = None
+        self.real_path = []
+        self.real_path_karman = []
 
         # Global navigation
         self.path = None
@@ -72,7 +72,7 @@ class RobotNav:
             self.theta = math.atan2(cam_data[0][1] - cam_data[1][1], cam_data[0][0] - cam_data[1][0])
             self.x = cam_data[0][0]
             self.y = cam_data[0][1]
-            self.real_path.append(self.x, self.y)
+            self.real_path.append([self.x, self.y])
 
         
 
@@ -86,7 +86,7 @@ class RobotNav:
         self.x = self.x_kalman
         self.y = self.y_kalman
 
-        self.real_path_karman.append(self.x_kalman, self.y_kalan)
+        self.real_path_karman.append([self.x_kalman, self.y_kalan])
 
     def set_goal(self, goal):
         """
