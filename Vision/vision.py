@@ -223,7 +223,6 @@ def transmit_data(image, show, margin):
     # print(shapes)
     for i in range(len(shapes)):
         shapes[i] = sort_vertices_clockwise(shapes[i])
-
     shapes = add_margin(shapes, margin)
 
     if show:
@@ -251,7 +250,3 @@ def transmit_data(image, show, margin):
 
     sz_img = np.shape(image)
     return start_coor, target_coor, shapes, sz_img, (center1,center2)
-
-#img = get_image(cap)
-#img = "premier_test.png"
-#start_coor, target_coor, shapes, sz_img, (center1,center2) = transmit_data(img,True,10)
