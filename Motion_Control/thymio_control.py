@@ -91,7 +91,7 @@ def astolfi(pos, theta, target, node):
     state = 0  # this functions is called recursivly untill state=1 i.e. the thymio has arrived
     delta_pos = [target[0] - pos[0], -(target[1] - pos[1])]
     rho = np.linalg.norm(delta_pos)
-    alpha = -theta + np.arctan2(delta_pos[1], delta_pos[0])
+    alpha = -theta + np.arctan2(-delta_pos[1], delta_pos[0])
     beta = -theta - alpha
     omega = ka * alpha + kb * beta
     if rho > thres_arrived:
