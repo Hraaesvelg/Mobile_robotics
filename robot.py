@@ -33,6 +33,8 @@ class RobotNav:
         self.x = None
         self.y = None
         self.theta = None
+        self.real_path = None
+        self.real_path_karman = None
 
         # Global navigation
         self.path = None
@@ -66,25 +68,25 @@ class RobotNav:
         Update robot's position from camera data
         :param cam_data: ((x_center, y_center),(x_front, y_front)): allows us to  vectorize Thymio position
         """
-        #print("avant")
-        #print(cam_data)
         if cam_data is not None:
-             self.theta = math.atan2(cam_data[0][1] - cam_data[1][1], cam_data[0][0] - cam_data[1][0])
-             self.x = cam_data[0][0]
-             self.y = cam_data[0][1]
-             #print("apres")
-             #print(cam_data)
+            self.theta = math.atan2(cam_data[0][1] - cam_data[1][1], cam_data[0][0] - cam_data[1][0])
+            self.x = cam_data[0][0]
+            self.y = cam_data[0][1]
+            self.real_path.append(self.x, self.y)
+
         
 
 
-    #def update_position_kalman(self):
-        #x_est, P_est = klm.kalman_filter()
-        #self.x_kalman = x_est[0]
-        #self.y_kalman = x_est[1]
+    def update_position_kalman(self):
+        x_est, P_est = klm.kalman_filter()
+        self.x_kalman = x_est[0]
+        self.y_kalman = x_est[1]
 
-        # self.theta = self.theta_kalman
-        # self.x = self.x_kalman
-        # self.y = self.y_kalman
+        self.theta = self.theta_kalman
+        self.x = self.x_kalman
+        self.y = self.y_kalman
+
+        self.real_path_karman.append(self.x_kalman, self.y_kalan)
 
     def set_goal(self, goal):
         """
@@ -160,14 +162,14 @@ class RobotNav:
         print('state updated')
         self.state = state
 
-    def avoidance_procedure(self):
-        print('Currently avoiding the obstacle')
-        return 0
-
     def get_path(self):
         return self.path
 
     def get_geometry(self):
         return self.x, self.y, self.theta
 
+    def get_real_path(self):
+        return self.real_path
 
+    def get_real_path_kalman(self):
+        return self.real_path_karman
