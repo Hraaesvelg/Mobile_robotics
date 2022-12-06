@@ -112,36 +112,49 @@ class RobotNav:
                 beta = beta - self.theta_kalman
             return beta
 
-    def update_step_respo(self, tolerance, show):
+    def update_step_respo(self, tolerance,i, show):
         """
         Determine to which case of the map the robot belong
         :param show:
         :param tolerance:
         :return:
         """
-        next_step = self.path[self.crt_stp]
-        dist = math.sqrt(int(self.x - next_step.x) ^ 2 + int(self.y - next_step.y) ^ 2)
+       
+        next_step = self.path[i]
+       
 
+        dist = math.sqrt(int(self.x - next_step.x)**2 + int(self.y - next_step.y)**2)
+        print("diiiiiiiiiiiiiiiiiiistttt")
         if dist < tolerance:
-            if show:
-                print(self.path(self.crt_stp), self.crt_stp)
-            if self.crt_stp == len(self.path) - 1:
+            print("innnnnnnnnnnnnnnnn")
+            i = i + 1
+            if i == len(self.path):
                 self.set_state(2)
-            else:
-                self.set_state(1)
-                self.increase_step()
-        return self.crt_stp
+            if show:
+                 print(self.path(self.crt_stp), self.crt_stp)
+            # if self.crt_stp == len(self.path) - 1:
+            #     self.set_state(2)
+            # else:
+            #     self.set_state(1)
+            #     self.increase_step()
+        return i
 
     def initialisation_step(self, img, margin, show=False):
         self.state = 0
+        #print("path1")
         start, target, shapes, size, start_points = vs.transmit_data(img, show, margin)
+        #print("path2")
         # Initialize the starting position
         self.initialize_starting_pos(start_points, start)
+        #print("path3")
         # Set the Goal of our robot
         self.set_goal(target)
         # Compute and assign the shortest path
+        #print("path4")
         shortest = glb.build_vis_graph(shapes, start, target)
         self.path = shortest
+        #print("path")
+        #print(shortest)
 
         if show:
             #img = cv2.imread(img)

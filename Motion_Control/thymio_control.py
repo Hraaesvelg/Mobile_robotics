@@ -1,5 +1,6 @@
 from tdmclient import ClientAsync, aw
 import numpy as np
+import matplotlib as math
 
 '''thymio dimensions'''
 r = 22  # mm
@@ -11,9 +12,15 @@ ka = 20  # > kp
 kb = -0.0001  # <0
 
 '''speed limits and sensors thresholds to tune accordingly'''
+<<<<<<< HEAD
 v_max = 100
 v_min = 50
 thres_arrived = 50
+=======
+v_max = 1000
+v_min = 100
+thres_arrived = 10
+>>>>>>> origin/main
 alpha_thres = 2
 
 
@@ -69,6 +76,7 @@ def get_prox_sensors(node, client):
     aw(client.sleep(0.05))
     return node.v.prox.horizontal
 
+<<<<<<< HEAD
 
 def mov_simplified(pos, theta, target, node):
     delta_pos = (int(target.x) - pos[0], int(target.y) - pos[1])
@@ -80,12 +88,24 @@ def mov_simplified(pos, theta, target, node):
         set_motor_speed(right_speed, left_speed, node)
         return 0
     elif rho > thres_arrived:
+=======
+def mov_simplified(pos, theta, target, node):
+    state=0
+    delta_pos = (int(target.x) - pos[0], int(target.y) - pos[1])
+    alpha = -theta + np.arctan2(delta_pos[1], delta_pos[0])
+    rho = np.linalg.norm(delta_pos)
+    if alpha>alpha_thres:
+        left_speed = int(-l*alpha)
+        right_speed = int(l*alpha)
+        set_motor_speed(right_speed, left_speed, node)
+        return 0
+    elif rho> thres_arrived :
+>>>>>>> origin/main
         set_motor_speed(v_min, v_min, node)
         return 0
     else:
         stop_motors(node)
         return 1
-
 
 def astolfi(pos, theta, target, node):
     state = 0  # this functions is called recursivly untill state=1 i.e. the thymio has arrived
