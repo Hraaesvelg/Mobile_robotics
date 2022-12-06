@@ -88,7 +88,7 @@ def detect_obstacle(image):  # detect les contours, puis recupere les coins de c
     img = image.copy()
 
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    ret, gray = cv2.threshold(gray, 40, 255, cv2.THRESH_BINARY)
+    ret, gray = cv2.threshold(gray, 50, 255, cv2.THRESH_BINARY)
     contours, hierarchy = cv2.findContours(gray, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
 
     shapes = []
@@ -223,7 +223,6 @@ def transmit_data(image, show, margin):
     # print(shapes)
     for i in range(len(shapes)):
         shapes[i] = sort_vertices_clockwise(shapes[i])
-
     shapes = add_margin(shapes, margin)
 
     if show:
@@ -251,7 +250,3 @@ def transmit_data(image, show, margin):
 
     sz_img = np.shape(image)
     return start_coor, target_coor, shapes, sz_img, (center1,center2)
-
-#img = get_image(cap)
-#img = "premier_test.png"
-#start_coor, target_coor, shapes, sz_img, (center1,center2) = transmit_data(img,True,10)
