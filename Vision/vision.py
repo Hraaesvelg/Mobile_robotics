@@ -88,7 +88,7 @@ def detect_obstacle(image):  # detect les contours, puis recupere les coins de c
     img = image.copy()
 
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    ret, gray = cv2.threshold(gray, 40, 255, cv2.THRESH_BINARY)
+    ret, gray = cv2.threshold(gray, 50, 255, cv2.THRESH_BINARY)
     contours, hierarchy = cv2.findContours(gray, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
 
     shapes = []
