@@ -136,6 +136,7 @@ class RobotNav:
             self.y_img = cam_data[0][1]
 
     def update_position_kalman(self):
+
         x_est, P_est = klm.kalman_filter()
         self.x_kalman = x_est[0]
         self.y_kalman = x_est[1]
