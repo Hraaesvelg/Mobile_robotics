@@ -103,6 +103,8 @@ class RobotNav:
 
     # Return orientation compared to x-axis between pi and -pi
     def compute_orientation(self, front, back):
+        print(front)
+        print(back)
         x = front[0] - back[0]
         y = front[1] - back[1]
         orientation = math.atan2(y, x)
@@ -142,32 +144,20 @@ class RobotNav:
             self.vx, self.vy = ctrl.get_motors_speed(node, client)
 
     def update_position_kalman(self, node, client, detection):
-        [x_front, y_front] = self.center_front
-        [x_back, y_back] = self.center_back
+        [x_front, y_front] = [self.center_front[0], self.center_front[1]]
+        [x_back, y_back] = [self.center_back[0], self.center_back[1]]
         vx, vy = ctrl.get_motors_speed(node, client)
-<<<<<<< HEAD
 
         dvx, dvy = vx - self.vx, vy - self.vy
         p_est = [1000 * np.eye(4)]
 
         x_est_front, p_est_front = klm.kalman_filter(0, 0, 0, 0, [x_front, y_front, vx, vy], p_est, dvx, dvy, False)
         x_est_back, p_est_back = klm.kalman_filter(0, 0, 0, 0, [x_back, y_back, vx, vy], p_est, dvx, dvy, False)
-
-        self.set_last_position(x_est_front, x_est_back)
+        print(x_est_front)
+        self.set_last_position([x_est_front[0][0][0], x_est_front[0][0][1]], [x_est_back[0][0][0], x_est_back[0][0][1]])
         self.path_kalman.append(self.middle)
         self.vx, self.vy = ctrl.get_motors_speed(node,client)
-=======
->>>>>>> origin/main
 
-        dvx, dvy = vx - self.vx, vy - self.vy
-        p_est = [1000 * np.eye(4)]
-
-        x_est_front, p_est_front = klm.kalman_filter(0, 0, 0, 0, [x_front, y_front, vx, vy], p_est, dvx, dvy, False)
-        x_est_back, p_est_back = klm.kalman_filter(0, 0, 0, 0, [x_back, y_back, vx, vy], p_est, dvx, dvy, False)
-
-        self.set_last_position(x_est_front, x_est_back)
-        self.path_kalman.append(self.middle)
-        self.vx, self.vy = ctrl.get_motors_speed(node, client)
 
     def set_goal(self, goal):
         """
@@ -229,12 +219,7 @@ class RobotNav:
             print(type(img))
             img = cv2.imread("Vision/test_2.png")
             img = glb.draw_path(img, shortest)
-            print("la")
-            print(shapes)
-            print(shapes[0][0][0])
-            print(shapes[0][0][1])
             for i in range(len(shapes)):
-                print("in")
                 for j in range(len(shapes[i])):
                     cv2.circle(img, (int(shapes[i][j][0]), int(shapes[i][j][1])), 7, (255,255,255), 2)
             plt.imshow(img)
