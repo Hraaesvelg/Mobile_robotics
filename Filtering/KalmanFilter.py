@@ -20,13 +20,13 @@ H = np.eye(4)
 #  @param   dvy             x-velocity control input.
 
 
-def kalman_filter(x_meas, y_meas, vx_meas, vy_meas, x_est_prev, P_est_prev, dvx=0, dvy=0, detection=True):
+def kalman_filter(x_meas, y_meas, vx_meas, vy_meas, x_est_prev, p_est_prev, dvx=0, dvy=0, detection=True):
     
     Input = np.array([dvx, dvy])
     x_est_a_priori = np.dot(A, x_est_prev) + np.dot(B, Input)
     
-    P_est_a_priori = np.dot(A, np.dot(P_est_prev, A.T))
-    P_est_a_priori = P_est_a_priori + Q if type(Q) != type(None) else P_est_a_priori
+    p_est_a_priori = np.dot(A, np.dot(p_est_prev, A.T))
+    p_est_a_priori = p_est_a_priori + Q if type(Q) != type(None) else p_est_a_priori
     
     if detection:
         R = np.diag([0.25, 0.25, 0.30, 0.30])
@@ -34,13 +34,11 @@ def kalman_filter(x_meas, y_meas, vx_meas, vy_meas, x_est_prev, P_est_prev, dvx=
         R = np.diag([math.inf, math.inf, math.inf, math.inf])
         
     y = np.array([x_meas, y_meas, vx_meas, vy_meas])
-
     i = y - np.dot(H, x_est_a_priori)
-
-    S = np.dot(H, np.dot(P_est_a_priori, H.T)) + R
-    K = np.dot(P_est_a_priori, np.dot(H.T, np.linalg.inv(S)))
+    S = np.dot(H, np.dot(p_est_a_priori, H.T)) + R
+    K = np.dot(p_est_a_priori, np.dot(H.T, np.linalg.inv(S)))
     
     x_est = x_est_a_priori + np.dot(K, i)
-    P_est = P_est_a_priori - np.dot(K, np.dot(H, P_est_a_priori))
+    p_est = p_est_a_priori - np.dot(K, np.dot(H, p_est_a_priori))
     
-    return x_est, P_est
+    return x_est, p_est

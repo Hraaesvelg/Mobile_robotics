@@ -16,15 +16,10 @@ import Motion_Control.thymio_control as ctrl
 
 
 class RobotNav:
-    def __init__(self, node, client):
+    def __init__(self):
         """
         Initializing robot class to enable path_finding
         """
-
-        # Robot instance
-        #self.ser = connect_to_thymio(verbose=verbose)
-        self.node = node
-        self.client = client
 
         # Robot geometry
         self.radius = 55
@@ -36,17 +31,20 @@ class RobotNav:
         #Coordinates of the two circles on the Thymio
         self.center_front = None
         self.center_back = None
+        self.middle = None
         self.orientation = None
 
         #Values returned by the kalman filter
         self.x_kalman = None
         self.y_kalman = None
         self.theta_kalman = None
+        self.path_kalman = []
 
         #Values we got from the picture
         self.x_img = None
         self.y_img = None
         self.theta_img = None
+        self.path_img = []
 
         #Velocity in the x and y direction
         self.vx = None
@@ -63,7 +61,7 @@ class RobotNav:
         self.crt_stp = 0
         
     #front is a boolean set to true if we want the front center and to false when we want the back center
-    def GetThymioValues(self, img, front):
+    def get_thymio_values(self, img, front, node, client):
 
         x = 0
         y = 0
@@ -72,92 +70,48 @@ class RobotNav:
 
         self.center_front, self.center_back = vs.detect_start(img, show=False, begin=False)[0], vs.detect_start(img, show=False,
                                                                                                                 begin=False)[1]
-        thymioCoordinates = (self.center_front + self.center_back) / 2
-        speed = (ctrl.get_motors_speed(self.node, self.client)[0] + ctrl.get_motors_speed(self.node, self.client)[1]) / 2 * SPEED_COEFF
+        thymio_coordinates = (self.center_front + self.center_back) / 2
+        speed = (ctrl.get_motors_speed(node, client)[0] + ctrl.get_motors_speed(node, client)[1]) / 2 * SPEED_COEFF
 
         '''Il nous faut une fonction qui vérifie que thymio a été détecté sur l'image / la vidéo'''
 
-        if thymioCoordinates is not None:
-            Detection = True
+        if thymio_coordinates is not None:
+            detection = True
             if front:
                 x = self.center_front[0]
                 y = self.center_front[1]
                 vx = speed * math.cos(self.theta_img)
                 vy = speed * math.sin(self.theta_img)
-                return x, y, vx, vy, Detection
+                return x, y, vx, vy, detection
             else: 
                 x = self.center_back[0]
                 y = self.center_back[1]
                 return x, y
 
         else:
-            Detection = False
+            detection = False
 
-        return x, y, vx, vy, Detection
+        return x, y, vx, vy, detection
 
     def set_last_position(self, front, back):
         self.center_front = front
-        self.center_back = back 
-        self.compute_orientation()
+        self.center_back = back
+        self.middle = (front+back)/2
+        self.orientation = self.compute_orientation(front, back)
         return 0
-        
-    
+
     # Return orientation compared to x-axis between pi and -pi
-    def compute_orientation(self):
-        x = self.center_front[0] - self.center_back[0]
-        y = self.center_front[1] - self.center_back[1]
-
+    def compute_orientation(self, front, back):
+        x = front[0] - back[0]
+        y = front[1] - back[1]
         orientation = math.atan2(y, x)
-        self.set_last_orientation(orientation)
-
         return orientation
-
-    def get_motor_right_speed(self, node, client):
-        try:
-            speed = ctrl.get_motors_speed(node, client)[0]
-            if speed <= MAX_MOTOR_SPEED:
-                return speed
-            else:
-                return speed - MAX_RAW_MOTOR_SPEED
-        except (IndexError, KeyError):
-            return 0
-
-    def get_motor_left_speed(self, node, client):
-        try:
-            speed = ctrl.get_motors_speed(node, client)[1]
-            if speed <= MAX_MOTOR_SPEED:
-                return speed
-            else:
-                return speed - MAX_RAW_MOTOR_SPEED
-        except (IndexError, KeyError):
-            return 0
-    
-
-    def set_last_orientation(self, orientation):
-        self.orientation = orientation
-
-    #def set_motor_right_speed(self, speed):
-    #    try:
-    #        if speed >= 0:
-    #            self.ser.set_var("motor.right.target", speed)
-    #        else:
-    #            self.ser.set_var("motor.right.target", MAX_RAW_MOTOR_SPEED + speed)
-    #    except (IndexError, KeyError):  # Raised if forgot to wait after connecting to Thymio.
-    #        pass
-
-    #def set_motor_left_speed(self, speed):
-    #    try:
-    #        if speed >= 0:
-    #            self.ser.set_var("motor.left.target", speed)
-    #        else:
-    #            self.ser.set_var("motor.left.target", MAX_RAW_MOTOR_SPEED + speed)
-    #    except (IndexError, KeyError):  # Raised if forgot to wait after connecting to Thymio.
-    #        pass
 
     def initialize_starting_pos(self, cam_data, center):
         """
         Initialise the starting position of the robot
         from camera data
+        :param center:
         :param cam_data: ((x_center, y_center),(x_front, y_front)): allows us to  vectorize Thymio position
         """
         if cam_data is not None:
@@ -230,7 +184,7 @@ class RobotNav:
         return self.crt_stp
 
     def initialisation_step(self, img, margin, show=False):
-        self.finished = 0
+        self.state = 0
         start, target, shapes, size, start_points = vs.transmit_data(img, False, margin)
         # Initialize the starting position
         self.initialize_starting_pos(start_points, start)
