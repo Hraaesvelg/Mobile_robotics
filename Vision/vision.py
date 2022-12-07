@@ -40,7 +40,7 @@ def detect_start1(image,begin=True):
     
 
     #circles = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, 1, 10, param1=25, param2=19, minRadius=0, maxRadius=18) #Perform HoughCircle Transform
-    circles = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, 1, 60, param1=25, param2=19, minRadius=0, maxRadius=60)
+    circles = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, 1, 20, param1=25, param2=19, minRadius=0, maxRadius=60)
     if len(circles == 2):
         print("ok 2 cercles detetc")
     else:
@@ -57,7 +57,7 @@ def detect_start1(image,begin=True):
 
     test_detect = True  # sera utile pour le kalman, false si la pos du thymio nest pas detetc
     start_coordinates = 0
-    if len(circles == 2):
+    if len(points) == 2:
         start_coordinates = ((points[0][0] + points[1][0]) / 2, (points[0][1] + points[1][1]) / 2)
         center1 = points[0]
         center2 = points[1]

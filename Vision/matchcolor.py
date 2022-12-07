@@ -26,8 +26,8 @@ def detect_start1(img):
     
 
     #circles = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, 1, 10, param1=25, param2=19, minRadius=0, maxRadius=18) #Perform HoughCircle Transform
-    circles = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, 1, 60, param1=25, param2=19, minRadius=0, maxRadius=60)
-    
+    circles = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, 1, 20, param1=25, param2=19, minRadius=0, maxRadius=20)
+   
     if circles is not None:
         circles = np.round(circles[0, :]).astype("int")
 
@@ -38,8 +38,9 @@ def detect_start1(img):
             pos = (int(x), int(y))
             points.append(pos)
     test_detection = True
+    print(points)
     start_coordinates = 0
-    if len(circles == 2):
+    if len(points) == 2:
         start_coordinates = ((points[0][0] + points[1][0]) / 2, (points[0][1] + points[1][1]) / 2)
         print("ok")
     else:
@@ -54,5 +55,5 @@ circles, img , gray, points, start_coordinates= detect_start1(img)
 print(circles)
 #print(points[0][0])
 print(start_coordinates)
-plt.imshow(img)
+plt.imshow(gray)
 plt.show()
