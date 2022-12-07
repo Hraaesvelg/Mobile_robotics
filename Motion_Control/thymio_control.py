@@ -12,8 +12,8 @@ ka = 15  # > kp
 kb = -1  # <0
 
 '''speed limits and sensors thresholds to tune accordingly'''
-v_max = 100
-v_min = 50
+v_max = 70
+v_min = 40
 thres_arrived = 50
 angle_thres = 0.17
 
@@ -70,22 +70,22 @@ def get_prox_sensors(node, client):
     aw(client.sleep(0.05))
     return node.v.prox.horizontal
 
-def mov_simplified(pos, theta, target, node):
-    state=0
-    delta_pos = (int(target.x) - pos[0], int(target.y) - pos[1])
-    alpha = -theta + np.arctan2(delta_pos[1], delta_pos[0])
-    rho = np.linalg.norm(delta_pos)
-    if alpha>alpha_thres:
-        left_speed = int(-l*alpha)
-        right_speed = int(l*alpha)
-        set_motor_speed(right_speed, left_speed, node)
-        return 0
-    elif rho> thres_arrived :
-        set_motor_speed(v_min, v_min, node)
-        return 0
-    else:
-        stop_motors(node)
-        return 1
+# def mov_simplified(pos, theta, target, node):
+#     state=0
+#     delta_pos = (int(target.x) - pos[0], int(target.y) - pos[1])
+#     alpha = -theta + np.arctan2(delta_pos[1], delta_pos[0])
+#     rho = np.linalg.norm(delta_pos)
+#     if alpha>alpha_thres:
+#         left_speed = int(-l*alpha)
+#         right_speed = int(l*alpha)
+#         set_motor_speed(right_speed, left_speed, node)
+#         return 0
+#     elif rho> thres_arrived :
+#         set_motor_speed(v_min, v_min, node)
+#         return 0
+#     else:
+#         stop_motors(node)
+#         return 1
 
 def astolfi(pos, theta, target, node):
     state = 0  # this functions is called recursivly untill state=1 i.e. the thymio has arrived

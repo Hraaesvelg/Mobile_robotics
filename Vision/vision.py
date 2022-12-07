@@ -43,7 +43,7 @@ def detect_start1(image, begin=True):
     # circles = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, 1, 10, param1=25, param2=19, minRadius=0, maxRadius=18) #Perform HoughCircle Transform
     circles = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, 1, 20, param1=25, param2=25, minRadius=10, maxRadius=50)
 
-    print(circles)
+    #print(circles)
     if circles is not None:
         circles = np.round(circles[0, :]).astype("int")
 
@@ -55,11 +55,12 @@ def detect_start1(image, begin=True):
             points.append(pos)
             rayon.append(r)
 
-    test_detect = True  # sera utile pour le kalman, false si la pos du thymio nest pas detetc
+    test_detect = False # sera utile pour le kalman, false si la pos du thymio nest pas detetc
     center1 = 0
     center2 = 0
     start_coordinates = 0
     if len(points) == 2:
+        test_detect = True
         start_coordinates = ((points[0][0] + points[1][0]) / 2, (points[0][1] + points[1][1]) / 2)
         if rayon[0] > rayon[1]:  # plus grand cercle a larriere
             center2 = points[0]  # center 2 derriere
@@ -67,11 +68,14 @@ def detect_start1(image, begin=True):
         else:
             center1 = points[0]
             center2 = points[1]
-        print("ok")
+        #print("ok")
     else:
-        print("revoir hough circles para")
-    if start_coordinates == 0:
+        #print("revoir hough circles para")
         test_detect = False
+    if test_detect == False:
+        start_coordinates = (0,0)
+        center1 = (0,0)
+        center2 = (0,0)
 
     if begin:
         return img, start_coordinates, (center1, center2), test_detect
@@ -147,7 +151,7 @@ def detect_obstacle(image):  # detect les contours, puis recupere les coins de c
     img = image.copy()
 
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    ret, gray = cv2.threshold(gray, 50, 255, cv2.THRESH_BINARY)
+    ret, gray = cv2.threshold(gray, 40, 255, cv2.THRESH_BINARY)
     contours, hierarchy = cv2.findContours(gray, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
 
     shapes = []
@@ -155,7 +159,7 @@ def detect_obstacle(image):  # detect les contours, puis recupere les coins de c
     for i in contours:
         size = cv2.contourArea(i)
         rect = cv2.minAreaRect(i)
-        if size < 100000:
+        if size < 50000:
             gray = np.float32(gray)
             mask = np.zeros(gray.shape, dtype="uint8")
             cv2.fillPoly(mask, [i], (255, 255, 255))
@@ -174,7 +178,7 @@ def detect_obstacle(image):  # detect les contours, puis recupere les coins de c
                 # for i in range(1, len(corners)):
                 # print(corners[i]
 
-    return gray, contours, shapes
+    return gray, contours, shapes, shape_center
 
 
 def sort_vertices_clockwise(shapes):  # reoganise les coins dans un ordre sens horaire
@@ -186,29 +190,56 @@ def sort_vertices_clockwise(shapes):  # reoganise les coins dans un ordre sens h
     return vertices
 
 
-def add_margin(shapes,
-               margin):  # recoit shapes avec les vertices sort clockwise, return les nouveaux points aves la marge
-    for i in range(len(shapes)):
-        for j in range(len(shapes[i])):
-            if j == 0:  # premier element soustrait le dernier a u et le second a v
-                u = shapes[i][j] - shapes[i][len(shapes[i]) - 1]
-                u_norm = u / np.linalg.norm(u)
-                v = shapes[i][j] - shapes[i][j + 1]
-                v_norm = v / np.linalg.norm(v)
-                shapes[i][j] = shapes[i][j] + margin * u_norm + margin * v_norm
-            elif j == (len(shapes[i]) - 1):  # dernier element on soustrait le premier a u et l'avant dernier a v
-                u = shapes[i][j] - shapes[i][0]
-                v = shapes[i][j] - shapes[i][j - 1]
-                u_norm = u / np.linalg.norm(u)
-                v_norm = v / np.linalg.norm(v)
-                shapes[i][j] = shapes[i][j] + margin * u_norm + margin * v_norm
-            else:  # on soustrait le coin avant a u et le coin dapres a v
-                u = shapes[i][j] - shapes[i][j - 1]
-                v = shapes[i][j] - shapes[i][j + 1]
-                u_norm = u / np.linalg.norm(u)
-                v_norm = v / np.linalg.norm(v)
-                shapes[i][j] = shapes[i][j] + margin * u_norm + margin * v_norm
-    return shapes
+def add_margin(coin, listCenters, margin):  # recoit shapes avec les vertices sort clockwise, return les nouveaux points aves la marge
+    # listCenters = []
+    # for i in coin:
+    #     print(i)
+    #     M = cv2.moments(np.array(i))
+    #     if M['m00'] != 0:
+    #         cx = int(M['m10']/M['m00'])
+    #         cy = int(M['m01']/M['m00'])
+    #         #cv2.circle(img, (cx, cy), 7, (0, 0, 255), -1)
+    #         listCenters.append([cx,cy])
+    
+    # marged_coin = []
+    # for i in range(len(coin)):
+    #     center = listCenters[i]
+    #     new_coin = []
+    #     for j in range(len(coin[i])):
+    #         vect = (coin[i][j][0] - center)/np.linalg.norm(coin[i][j][0] - center)
+    #         new_coin.append(coin[i][j][0]+ margin*vect)
+    #     marged_coin.append(new_coin)
+    
+    # return marged_coin
+
+    for i in range(len(coin)):
+        for j in range(len(coin[i])):
+            u = coin[i][j] - listCenters[i]
+            u_norm = u / np.linalg.norm(u)
+            coin[i][j] = coin[i][j] + margin*u_norm
+    return coin
+    # for i in range(len(shapes)):
+    #     for j in range(len(shapes[i])):
+    #         if j == 0:  # premier element soustrait le dernier a u et le second a v
+    #             u = shapes[i][j] - shapes[i][len(shapes[i]) - 1]
+    #             u_norm = u / np.linalg.norm(u)
+    #             v = shapes[i][j] - shapes[i][j + 1]
+    #             v_norm = v / np.linalg.norm(v)
+    #             shapes[i][j] = shapes[i][j] + margin * u_norm + margin * v_norm
+    #         elif j == (len(shapes[i]) - 1):  # dernier element on soustrait le premier a u et l'avant dernier a v
+    #             u = shapes[i][j] - shapes[i][0]
+    #             v = shapes[i][j] - shapes[i][j - 1]
+    #             u_norm = u / np.linalg.norm(u)
+    #             v_norm = v / np.linalg.norm(v)
+    #             shapes[i][j] = shapes[i][j] + margin * u_norm + margin * v_norm
+    #         else:  # on soustrait le coin avant a u et le coin dapres a v
+    #             u = shapes[i][j] - shapes[i][j - 1]
+    #             v = shapes[i][j] - shapes[i][j + 1]
+    #             u_norm = u / np.linalg.norm(u)
+    #             v_norm = v / np.linalg.norm(v)
+    #             shapes[i][j] = shapes[i][j] + margin * u_norm + margin * v_norm
+    
+    # return shapes
 
 
 def secure_path(obstacle, margin):
@@ -281,12 +312,12 @@ def transmit_data(image, show, margin):
     #while not test_detect:
         #img_start, start_coor, (center1, center2), test_detect = detect_start1(image)
     target_coor, img_target, res_target = detect_target(img_start)
-    gray2, contours, shapes = detect_obstacle(img_target)
+    gray2, contours, shapes, shape_center = detect_obstacle(img_target)
     # print("shape avant")
     # print(shapes)
     for i in range(len(shapes)):
         shapes[i] = sort_vertices_clockwise(shapes[i])
-    shapes = add_margin(shapes, margin)
+    shapes = add_margin(shapes, shape_center, margin)
 
     if show:
         # print("shapes")

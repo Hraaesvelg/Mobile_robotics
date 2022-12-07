@@ -59,6 +59,8 @@ class RobotNav:
         self.state = 0
         self.crt_stp = 0
 
+        self.shapes = None
+
     # front is a boolean set to true if we want the front center and to false when we want the back center
     def get_thymio_values(self, img, front, node, client):
 
@@ -133,8 +135,8 @@ class RobotNav:
             self.theta_img = math.atan2(cam_data[0][1] - cam_data[1][1], cam_data[0][0] - cam_data[1][0])
             self.x_img = cam_data[0][0]
             self.y_img = cam_data[0][1]
-            print(cam_data[1])
-            print(cam_data[0])
+            #print(cam_data[1])
+            #print(cam_data[0])
             self.set_last_position(cam_data[1], cam_data[0])
             self.path_img.append(self.middle)
 
@@ -142,12 +144,16 @@ class RobotNav:
         [x_front, y_front] = self.center_front
         [x_back, y_back] = self.center_back
         vx, vy = ctrl.get_motors_speed(node, client)
+
         dvx, dvy = vx - self.vx, vy - self.vy
-        x_est_front = [x_front, y_front]
-        new_x_est_front, new_P_est_front = klm.kalman_filter(x_front, y_front, vx, vy, x_est_front[-1]
-                                                         , P_est_front[-1], dvx, dvy, detection=detection)
-        new_x_est_back, new_P_est_back = klm.kalman_filter(x_back, y_back, vx, vy, x_est_back[-1]
-                                                       , P_est_back[-1], dvx, dvy, detection=detection)
+        p_est = [1000 * np.eye(4)]
+
+        x_est_front, p_est_front = klm.kalman_filter(0, 0, 0, 0, [x_front, y_front, vx, vy], p_est, dvx, dvy, False)
+        x_est_back, p_est_back = klm.kalman_filter(0, 0, 0, 0, [x_back, y_back, vx, vy], p_est, dvx, dvy, False)
+
+        self.set_last_position(x_est_front, x_est_back)
+        self.path_kalman.append(self.middle)
+        self.vx, self.vy = ctrl.get_motors_speed(node,client)
 
 
     def set_goal(self, goal):
@@ -201,17 +207,28 @@ class RobotNav:
         # Set the Goal of our robot
         self.set_goal(target)
         # Compute and assign the shortest path
-        shortest = glb.build_vis_graph(shapes, start, target)
+        shortest, shapes = glb.build_vis_graph(shapes, start, target)
         self.path = shortest
+        self.shapes = shapes
         print(shortest)
         plt.imshow(img)
         if show:
             print(type(img))
-            img = cv2.imread(img)
+            img = cv2.imread("Vision/test_2.png")
             img = glb.draw_path(img, shortest)
+            print("la")
+            print(shapes)
+            print(shapes[0][0][0])
+            print(shapes[0][0][1])
+            for i in range(len(shapes)):
+                print("in")
+                for j in range(len(shapes[i])):
+                    cv2.circle(img, (int(shapes[i][j][0]), int(shapes[i][j][1])), 7, (255,255,255), 2)
             plt.imshow(img)
             plt.show()
 
+    def get_shapes(self):
+            return self.shapes
     def get_crt_step(self):
         return self.crt_stp
 

@@ -97,7 +97,7 @@ def build_vis_graph(shapes, start, target):
     g.build(vgPoints)
 
     shortest_path = g.shortest_path(start, target)
-    return shortest_path
+    return shortest_path, shapes
 
 
 def draw_path(img, shortest):
