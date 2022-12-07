@@ -7,7 +7,6 @@ import numpy as np
 import cv2
 from matplotlib import pyplot as plt
 
-
 # Homemade functions
 import Global_Navigation.global_navigation as glb
 import Vision.vision as vs
@@ -28,25 +27,25 @@ class RobotNav:
         self.dist_wheel = 95
         self.speed = 50
 
-        #Coordinates of the two circles on the Thymio
+        # Coordinates of the two circles on the Thymio
         self.center_front = None
         self.center_back = None
         self.middle = None
         self.orientation = None
 
-        #Values returned by the kalman filter
+        # Values returned by the kalman filter
         self.x_kalman = None
         self.y_kalman = None
         self.theta_kalman = None
         self.path_kalman = []
 
-        #Values we got from the picture
+        # Values we got from the picture
         self.x_img = None
         self.y_img = None
         self.theta_img = None
         self.path_img = []
 
-        #Velocity in the x and y direction
+        # Velocity in the x and y direction
         self.vx = None
         self.vy = None
 
@@ -59,23 +58,21 @@ class RobotNav:
         # state ==> 0 not initialized/ 1=moving to target/ 2=finished
         self.state = 0
         self.crt_stp = 0
-        
-    #front is a boolean set to true if we want the front center and to false when we want the back center
+
+    # front is a boolean set to true if we want the front center and to false when we want the back center
     def get_thymio_values(self, img, front, node, client):
 
         x = 0
         y = 0
         vx = 0
         vy = 0
+        start = vs.detect_start1(img, show=False, begin=False)
 
-        self.center_front, self.center_back = vs.detect_start(img, show=False, begin=False)[0], vs.detect_start(img, show=False,
-                                                                                                                begin=False)[1]
+        self.center_front, self.center_back = start[1][0], start[1][1]
         thymio_coordinates = (self.center_front + self.center_back) / 2
         speed = (ctrl.get_motors_speed(node, client)[0] + ctrl.get_motors_speed(node, client)[1]) / 2 * SPEED_COEFF
 
-        '''Il nous faut une fonction qui vérifie que thymio a été détecté sur l'image / la vidéo'''
-
-        if thymio_coordinates is not None:
+        if start[2] is not None:
             detection = True
             if front:
                 x = self.center_front[0]
@@ -83,7 +80,7 @@ class RobotNav:
                 vx = speed * math.cos(self.theta_img)
                 vy = speed * math.sin(self.theta_img)
                 return x, y, vx, vy, detection
-            else: 
+            else:
                 x = self.center_back[0]
                 y = self.center_back[1]
                 return x, y
@@ -94,6 +91,8 @@ class RobotNav:
         return x, y, vx, vy, detection
 
     def set_last_position(self, front, back):
+        front = np.array(front)
+        back = np.array(back)
         self.center_front = front
         self.center_back = back
         self.middle = (front+back)/2
@@ -134,12 +133,22 @@ class RobotNav:
             self.theta_img = math.atan2(cam_data[0][1] - cam_data[1][1], cam_data[0][0] - cam_data[1][0])
             self.x_img = cam_data[0][0]
             self.y_img = cam_data[0][1]
+            print(cam_data[1])
+            print(cam_data[0])
+            self.set_last_position(cam_data[1], cam_data[0])
+            self.path_img.append(self.middle)
 
-    def update_position_kalman(self):
+    def update_position_kalman(self, node, client, detection):
+        [x_front, y_front] = self.center_front
+        [x_back, y_back] = self.center_back
+        vx, vy = ctrl.get_motors_speed(node, client)
+        dvx, dvy = vx - self.vx, vy - self.vy
+        x_est_front = [x_front, y_front]
+        new_x_est_front, new_P_est_front = klm.kalman_filter(x_front, y_front, vx, vy, x_est_front[-1]
+                                                         , P_est_front[-1], dvx, dvy, detection=detection)
+        new_x_est_back, new_P_est_back = klm.kalman_filter(x_back, y_back, vx, vy, x_est_back[-1]
+                                                       , P_est_back[-1], dvx, dvy, detection=detection)
 
-        x_est, P_est = klm.kalman_filter()
-        self.x_kalman = x_est[0]
-        self.y_kalman = x_est[1]
 
     def set_goal(self, goal):
         """
@@ -186,7 +195,7 @@ class RobotNav:
 
     def initialisation_step(self, img, margin, show=False):
         self.state = 0
-        start, target, shapes, size, start_points = vs.transmit_data(img, False, margin)
+        start, target, shapes, size, start_points = vs.transmit_data(img, show, margin)
         # Initialize the starting position
         self.initialize_starting_pos(start_points, start)
         # Set the Goal of our robot
@@ -194,8 +203,10 @@ class RobotNav:
         # Compute and assign the shortest path
         shortest = glb.build_vis_graph(shapes, start, target)
         self.path = shortest
-
+        print(shortest)
+        plt.imshow(img)
         if show:
+            print(type(img))
             img = cv2.imread(img)
             img = glb.draw_path(img, shortest)
             plt.imshow(img)
@@ -216,4 +227,14 @@ class RobotNav:
     def avoidance_procedure(self):
         print('Currently avoiding the obstacle')
 
+    def get_path(self, type):
+        if type == 'kalman':
+            return self.path_kalman
+        elif type == 'img':
+            return self.path_img
+        else:
+            return self.path
+
+    def get_geometry(self):
+        return self.middle, self.orientation
 

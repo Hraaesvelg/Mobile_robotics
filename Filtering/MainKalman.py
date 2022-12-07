@@ -1,6 +1,6 @@
 from KalmanFilter import kalman_filter
 import RobotKalman as RK 
-import vision as vs
+import Vision.vision as vs
 from tdmclient import ClientAsync, aw
 
 
@@ -10,9 +10,9 @@ def main():
     client = ClientAsync()
     node = await client.wait_for_node()
     await node.lock()
-    
+
     Thymio = RK.RobotNav(node, client)
-    
+
     thymio_start = vs.detect_start(img, show=False, begin=True)
     img_taken = False
     
