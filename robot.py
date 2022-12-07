@@ -124,7 +124,7 @@ class RobotNav:
 
             self.start = (self.x_img, self.y_img)
 
-    def update_position_cam(self, cam_data):
+    def update_position_cam(self, cam_data,node, client):
         """
         Update robot's position from camera data
         :param cam_data: ((x_center, y_center),(x_front, y_front)): allows us to  vectorize Thymio position
@@ -137,18 +137,22 @@ class RobotNav:
             print(cam_data[0])
             self.set_last_position(cam_data[1], cam_data[0])
             self.path_img.append(self.middle)
+            self.vx, self.vy = ctrl.get_motors_speed(node, client)
 
     def update_position_kalman(self, node, client, detection):
         [x_front, y_front] = self.center_front
         [x_back, y_back] = self.center_back
         vx, vy = ctrl.get_motors_speed(node, client)
-        dvx, dvy = vx - self.vx, vy - self.vy
-        x_est_front = [x_front, y_front]
-        new_x_est_front, new_P_est_front = klm.kalman_filter(x_front, y_front, vx, vy, x_est_front[-1]
-                                                         , P_est_front[-1], dvx, dvy, detection=detection)
-        new_x_est_back, new_P_est_back = klm.kalman_filter(x_back, y_back, vx, vy, x_est_back[-1]
-                                                       , P_est_back[-1], dvx, dvy, detection=detection)
 
+        dvx, dvy = vx - self.vx, vy - self.vy
+        p_est = [1000 * np.eye(4)]
+
+        x_est_front, p_est_front = klm.kalman_filter(0, 0, 0, 0, [x_front, y_front, vx, vy], p_est, dvx, dvy, False)
+        x_est_back, p_est_back = klm.kalman_filter(0, 0, 0, 0, [x_back, y_back, vx, vy], p_est, dvx, dvy, False)
+
+        self.set_last_position(x_est_front, x_est_back)
+        self.path_kalman.append(self.middle)
+        self.vx, self.vy = ctrl.get_motors_speed(node, client)
 
     def set_goal(self, goal):
         """
