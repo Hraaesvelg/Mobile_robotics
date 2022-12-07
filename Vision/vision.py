@@ -23,6 +23,7 @@ def get_image(cap):
 def detect_start1(image,begin=True):
     img = image.copy()
     points=[]
+    rayon = []
 
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
@@ -40,11 +41,9 @@ def detect_start1(image,begin=True):
     
 
     #circles = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, 1, 10, param1=25, param2=19, minRadius=0, maxRadius=18) #Perform HoughCircle Transform
-    circles = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, 1, 20, param1=25, param2=19, minRadius=0, maxRadius=60)
-    if len(circles == 2):
-        print("ok 2 cercles detetc")
-    else:
-        print("revoir hough circles para")
+    circles = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, 1, 20, param1=25, param2=19, minRadius=0, maxRadius=30)
+    
+    print(circles)
     if circles is not None:
         circles = np.round(circles[0, :]).astype("int")
 
@@ -54,13 +53,20 @@ def detect_start1(image,begin=True):
             cv2.rectangle(img, (x - int(1.4*r), y - int(1.4*r)), (x + int(1.4*r), y + int(1.4*r)), (255, 255, 255), -1)
             pos = (int(x), int(y))
             points.append(pos)
+            rayon.append(r)
 
     test_detect = True  # sera utile pour le kalman, false si la pos du thymio nest pas detetc
+    center1 = 0
+    center2 = 0
     start_coordinates = 0
     if len(points) == 2:
         start_coordinates = ((points[0][0] + points[1][0]) / 2, (points[0][1] + points[1][1]) / 2)
-        center1 = points[0]
-        center2 = points[1]
+        if rayon[0] > rayon[1]:  #plus grand cercle a larriere
+            center2 = points[0]   # center 2 derriere
+            center1 = points[1]   #center 1 devant plus petit cercle
+        else:
+            center1 = points[0]
+            center2 = points[1]
         print("ok")
     else:
         print("revoir hough circles para")
@@ -306,7 +312,15 @@ def transmit_data(image, show, margin):
     sz_img = np.shape(image)
     return start_coor, target_coor, shapes, sz_img, (center1,center2)
 
-
+#cap = cv2.VideoCapture(0)
+#img = get_image(cap)
+#img = cv2.imread("test_2.png")
+#img, start_coordinates, (center1,center2), test_detect = detect_start1(img,begin=True)
+#print(center1)
+#print(center2)
+#plt.imshow(img)
+#plt.show()
+#start_coor, target_coor, shapes, sz_img, (center1,center2) = transmit_data(img, True, 10)
 
 
 
