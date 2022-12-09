@@ -7,9 +7,9 @@ r = 22  # mm
 l = 48  # mm
 
 '''controller constants to tune accordingly'''
-kp = 10  # >0
-ka = 15  # > kp
-kb = -1  # <0
+kp = 25  # >0
+ka = 50  # > kp
+kb = -0.0001  # <0
 
 '''speed limits and sensors thresholds to tune accordingly'''
 v_max = 70

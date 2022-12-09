@@ -28,9 +28,9 @@ class RobotNav:
         self.speed = 50
 
         # Coordinates of the two circles on the Thymio
-        self.center_front = None
-        self.center_back = None
-        self.middle = None
+        self.center_front = []
+        self.center_back = []
+        self.middle = []
         self.orientation = None
 
         # Values returned by the kalman filter
@@ -146,17 +146,20 @@ class RobotNav:
     def update_position_kalman(self, node, client, detection):
         [x_front, y_front] = [self.center_front[0], self.center_front[1]]
         [x_back, y_back] = [self.center_back[0], self.center_back[1]]
-        vx, vy = ctrl.get_motors_speed(node, client)
+        speed = (ctrl.get_motors_speed(node, client)[0] + ctrl.get_motors_speed(node, client)[1])/2 * COEFF_SPEED
+        vx = speed * math.cos(self.orientation)
+        vy = speed * math.sin(self.orientation)
 
         dvx, dvy = vx - self.vx, vy - self.vy
         p_est = [1000 * np.eye(4)]
 
         x_est_front, p_est_front = klm.kalman_filter(0, 0, 0, 0, [x_front, y_front, vx, vy], p_est, dvx, dvy, False)
         x_est_back, p_est_back = klm.kalman_filter(0, 0, 0, 0, [x_back, y_back, vx, vy], p_est, dvx, dvy, False)
-        print(x_est_front)
-        self.set_last_position([x_est_front[0][0][0], x_est_front[0][0][1]], [x_est_back[0][0][0], x_est_back[0][0][1]])
+
+        self.set_last_position([x_est_front[0][0], x_est_front[0][1]], [x_est_back[0][0], x_est_back[0][1]])
         self.path_kalman.append(self.middle)
-        self.vx, self.vy = ctrl.get_motors_speed(node,client)
+        self.vx = vx
+        self.vy = vy
 
 
     def set_goal(self, goal):
