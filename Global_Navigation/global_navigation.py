@@ -113,7 +113,10 @@ def draw_path(img, shortest):
     return img
 
 
-def draw_thymio(img, path):
+def draw_thymio(img, path, mode):
     for i in range(len(path)):
-        img = cv2.circle(img, (int(path[i][0]), int(path[i][1])), int(3), (0, 0, 255), 2)
+        if mode == 'kalman':
+            img = cv2.circle(img, (int(path[i][0]), int(path[i][1])), int(3), (0, 255, 0), 2)
+        else:
+            img = cv2.circle(img, (int(path[i][0]), int(path[i][1])), int(3), (0, 0, 255), 2)
     return img
