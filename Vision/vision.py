@@ -148,6 +148,11 @@ def detect_target(image):
 
 
 def detect_obstacle(image):  # detect les contours, puis recupere les coins de chaque polygone
+    """
+
+    :param image:
+    :return:
+    """
     img = image.copy()
 
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
