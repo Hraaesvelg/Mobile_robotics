@@ -30,8 +30,8 @@ class RobotNav:
         # Coordinates of the two circles on the Thymio
         self.center_front = None
         self.center_back = None
-        self.middle = None
-        self.orientation = None
+        self.middle = []
+        self.orientation = []
 
         # Values returned by the kalman filter
         self.x_kalman = None
