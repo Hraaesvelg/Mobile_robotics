@@ -12,7 +12,7 @@ v_max = 200
 v_min = 20
 thres_arrived = 50
 angle_thres = 0.17
-obstSpeedGain = np.array([6,4,-2,-6,-8])/100
+obstSpeedGain = np.array([6,4,-2,-0,-0])/100
 
 
 def thym_motors(right, left):
