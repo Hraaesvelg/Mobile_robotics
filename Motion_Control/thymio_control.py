@@ -58,7 +58,7 @@ def get_motors_speed(node, client):
 
 def get_prox_sensors(node, client):
     """
-    Function to get access to current motors' speed
+    Function to survey the thymio's sensors
     :param node:
     :param node, client: link to our robot
     :return: structure containing proximity sensors' values ([prox1,..., prox8])
