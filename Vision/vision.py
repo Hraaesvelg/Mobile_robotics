@@ -84,7 +84,7 @@ def detect_target(image):
     top_left = (max_loc[0], max_loc[1])
     bottom_right = (top_left[0] + w, top_left[1] + h)
     target_coordinates = (top_left[0] + w / 2, top_left[1] + h / 2)
-    cv2.rectangle(img, top_left, bottom_right, (255, 255, 255),-1)  # rect blue, draw rectangle 2 opp corner top left and bottom right
+    cv2.rectangle(img, top_left, bottom_right, (255, 255, 255),-1)  # draw white rectangle on the target
 
     return target_coordinates, img, res
 
