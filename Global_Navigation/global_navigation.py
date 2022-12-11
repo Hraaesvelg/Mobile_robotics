@@ -1,9 +1,6 @@
 import cv2
 from matplotlib import pyplot as plt
-import numpy as np
 import pyvisgraph as vg
-from geopandas import GeoSeries
-from shapely.geometry import Polygon, Point, LineString
 
 
 def get_path_lines(image, path):
@@ -32,9 +29,6 @@ def plot_geometric_data(map, color='Blues', show=True):
     map.plot(color)
     if show:
         plt.show()
-
-
-
 
 
 def build_vis_graph(shapes, start, target):
@@ -79,10 +73,10 @@ def draw_path(img, shortest):
 
 def draw_thymio(img, path, mode):
     """
-
+    Draw all the position recorded in the path on the image
     :param img: The Image we want to modify
     :param path: A list of all the previous position of the robot
-    :param mode: If the input mode is 'kalman' draw all position 
+    :param mode: If the input mode is 'kalman' draw all position in a different color. If not draw in red
     :return:
     """
     for i in range(len(path)):
