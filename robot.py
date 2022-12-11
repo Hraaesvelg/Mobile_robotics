@@ -31,6 +31,10 @@ class RobotNav:
         self.center_back = []
         self.middle = []
         self.orientation = None
+        
+        self.x_est_front = [np.array([0, 0, 0, 0])]
+        self.x_est_back = [np.array([0, 0, 0, 0])]
+        self.P_est = [1000 * np.eye(4)]
 
         # Values returned by the kalman filter
         self.x_kalman = None
@@ -60,43 +64,21 @@ class RobotNav:
 
         self.shapes = None
 
-    def get_thymio_values(self, img, front, node, client):
-        """
-        Detect the geometric data of the thymio using camera and odometry
-        :param img: The image we want to analyse
-        :param front: front is a boolean set to true if we want the front center and to false when we want the
-        back center
-        :param node: needed to control the motor of the robot
-        :param client: needed to ask data from sensors to our robot
-        :return: Return the position and speed structure used by kalman
-        """
-        x = 0
-        y = 0
-        vx = 0
-        vy = 0
-        start = vs.detect_start1(img, show=False, begin=False)
+    def set_x_est(self, x_front, y_front, x_back, y_back):
+        self.x_est_front = [np.array([x_front, y_front, 0, 0])]
+        self.x_est_back = [np.array([x_back, y_back, 0, 0])]
+        return 0
 
-        self.center_front, self.center_back = start[1][0], start[1][1]
-        thymio_coordinates = (self.center_front + self.center_back) / 2
-        speed = (ctrl.get_motors_speed(node, client)[0] + ctrl.get_motors_speed(node, client)[1]) / 2 * SPEED_COEFF
+    def set_thymio_values(self, two_centres, node, client):
 
-        if start[2] is not None:
-            detection = True
-            if front:
-                x = self.center_front[0]
-                y = self.center_front[1]
-                vx = speed * math.cos(self.theta_img)
-                vy = speed * math.sin(self.theta_img)
-                return x, y, vx, vy, detection
-            else:
-                x = self.center_back[0]
-                y = self.center_back[1]
-                return x, y
-
-        else:
-            detection = False
-
-        return x, y, vx, vy, detection
+        self.center_front = two_centres[0]
+        self.center_back = two_centres[1]
+        self.orientation = self.compute_orientation(self.center_front, self.center_back)
+        speed = COEFF_SPEED*(ctrl.get_motors_speed(node, client)[0]
+                 + ctrl.get_motors_speed(node, client)[1]) / 2
+        self.vx = speed * math.cos(self.orientation)
+        self.vy = -speed * math.sin(self.orientation)
+        return 0
 
     def set_last_position(self, front, back):
         """
@@ -160,29 +142,37 @@ class RobotNav:
             self.path_img.append(self.middle)
             self.vx, self.vy = ctrl.get_motors_speed(node, client)
 
-    def update_position_kalman(self, node, client):
+    def update_position_kalman(self, dvx, dvy, node, client, detection):
         """
         Update the position of the robot using kalman filter when the camera doesn't find the robot
         :param node: needed to control the motor of the robot
         :param client: needed to ask data from sensors to our robot
         :return: Nothing but update the position of the robot
         """
-        [x_front, y_front] = [self.center_front[0], self.center_front[1]]
-        [x_back, y_back] = [self.center_back[0], self.center_back[1]]
-        speed = (ctrl.get_motors_speed(node, client)[0] + ctrl.get_motors_speed(node, client)[1])/2 * 0.3
-        vx = speed * math.cos(self.orientation)
-        vy = speed * math.sin(self.orientation)
+        if detection:
+            new_x_est_front, p_est_front = klm.kalman_filter(self.center_front[0], self.center_front[1], self.vx, self.vy,
+                                                             self.x_est_front[-1], self.P_est[-1], dvx, dvy, detection)
+            new_x_est_back, p_est_back = klm.kalman_filter(self.center_back[0], self.center_back[1], self.vx, self.vy,
+                                                           self.x_est_back[-1], self.P_est[-1], dvx, dvy, detection)
+        else:
+            new_x_est_front, p_est_front = klm.kalman_filter(0, 0, 0, 0, self.x_est_front[-1], self.P_est[-1],
+                                                             dvx, dvy, detection)
+            new_x_est_back, p_est_back = klm.kalman_filter(0, 0, 0, 0, self.x_est_back[-1], self.P_est[-1],
+                                                           dvx, dvy,detection)
 
-        dvx, dvy = vx - self.vx, vy - self.vy
-        p_est = [1000 * np.eye(4)]
+        self.x_est_front.append(new_x_est_front)
+        self.x_est_back.append(new_x_est_back)
+        self.P_est.append(p_est_front)
 
-        x_est_front, p_est_front = klm.kalman_filter(0, 0, 0, 0, [x_front, y_front, vx, vy], p_est, dvx, dvy, False)
-        x_est_back, p_est_back = klm.kalman_filter(0, 0, 0, 0, [x_back, y_back, vx, vy], p_est, dvx, dvy, False)
+        self.set_last_position([new_x_est_front[0], new_x_est_front[1]], [new_x_est_back[0], new_x_est_back[1]])
 
-        self.set_last_position([x_est_front[0][0][0], x_est_front[0][0][1]], [x_est_back[0][0][0], x_est_back[0][0][1]])
         self.path_kalman.append(self.middle)
-        self.vx = vx
-        self.vy = vy
+
+    def get_last_vx(self):
+        return self.x_est_front[-1][2]
+
+    def get_last_vy(self):
+        return self.x_est_front[-1][3]
 
     def set_goal(self, goal):
         """
