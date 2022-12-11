@@ -12,7 +12,7 @@ v_max = 200
 v_min = 20
 thres_arrived = 50
 angle_thres = 0.17
-obstSpeedGain = np.array([6,4,-2,-0,-0])/100
+obstSpeedGain = np.array([6, 4, -2, -0, -0]) / 100
 
 
 def thym_motors(right, left):
@@ -59,7 +59,6 @@ def get_motors_speed(node, client):
 def get_prox_sensors(node, client):
     """
     Function to survey the thymio's sensors
-    :param node:
     :param node, client: link to our robot
     :return: structure containing proximity sensors' values ([prox1,..., prox8])
     """
@@ -69,30 +68,36 @@ def get_prox_sensors(node, client):
 
 
 def astolfi(pos, theta, target, node, client):
-    state = 0  # this functions is called recursivly untill state=1 i.e. the thymio has arrived
+    """
+    Astolfi controller used to control the robot. We have added obstacles' avoidance procedure
+    :param pos: Actual Position of the thymio: [x,y]
+    :param theta: Actual angle
+    :param target: Target's position: [x,y]
+    :param node, client: link to our robot
+    :return: True if the target is reached, false otherwise
+    """
+    state = 0
     delta_pos = [target[0] - pos[0], -(target[1] - pos[1])]
     rho = np.linalg.norm(delta_pos)
     alpha = -theta - np.arctan2(delta_pos[1], delta_pos[0])
-    if alpha>np.pi:
-        alpha-=2*np.pi
-    elif alpha<-np.pi:
-        alpha+=2*np.pi
+    if alpha > np.pi:
+        alpha -= 2 * np.pi
+    elif alpha < -np.pi:
+        alpha += 2 * np.pi
     beta = theta - alpha
-    if beta>np.pi:
-        beta-=2*np.pi
-    elif beta<-np.pi:
-        beta+=2*np.pi
-    sensors= np.array(get_prox_sensors(node, client)[0:5])
-    vit_obst_left=np.sum(np.multiply(sensors,obstSpeedGain))
-    vit_obst_right=np.sum(np.multiply(sensors,np.flip(obstSpeedGain)))
-    #print("teta=",theta,"  alpa=",alpha,"  beta=",beta,"  rho=",rho) #prints to debug
-    
-    if (alpha>angle_thres):
+    if beta > np.pi:
+        beta -= 2 * np.pi
+    elif beta < -np.pi:
+        beta += 2 * np.pi
+    sensors = np.array(get_prox_sensors(node, client)[0:5])
+    vit_obst_left = np.sum(np.multiply(sensors, obstSpeedGain))
+    vit_obst_right = np.sum(np.multiply(sensors, np.flip(obstSpeedGain)))
+
+    if alpha > angle_thres:
         omega = ka * alpha + kb * beta
-    else: 
-        omega=kb*beta
-    
-    omega = ka * alpha + kb * beta
+    else:
+        omega = kb * beta
+
     if rho > thres_arrived:
         v = kp * rho
         if v > v_max: v = v_max
@@ -107,7 +112,11 @@ def astolfi(pos, theta, target, node, client):
 
 
 def leds_blink(node):
-    #led show to celebrate the thymio's arrival
+    """
+    Led show to celebrate the thymio's arrival
+    :param node: Needed to control the thymio
+    :return:
+    """
     program = """
     var on = 0  # 0=off, 1=on
     timer.period[0] = 500

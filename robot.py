@@ -295,4 +295,3 @@ class RobotNav:
         :return: The position and the orientation of the robot [[pos_x, pos_y], orientation]
         """
         return self.middle, self.orientation
-
