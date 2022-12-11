@@ -4,9 +4,12 @@ import cv2
 import math
 
 
-
-
 def get_image(cap):
+    """
+    Save the image given by cap and save it at "Vision/test_2.png"
+    :param cap: the video flow
+    :return: the image
+    """
     result, image = cap.read()
 
     if result:
@@ -17,7 +20,14 @@ def get_image(cap):
         return None
 
 
-def detect_start1(image, begin=True):  #detect start coordinates by using Hough circles method
+def detect_start1(image, begin=True):
+    """
+    Detect starts coordinates by using Hough circles method
+    :param image: The image taken from the video flow
+    :param begin: This boolean let us change the returned parameters, if begin is true ie. we are at the initialization
+    step we return the full set of parameters. If not, it only returns the position of the robot.
+    :return:
+    """
     img = image.copy()
     points = []
     rayon = []
@@ -71,6 +81,12 @@ def detect_start1(image, begin=True):  #detect start coordinates by using Hough 
 
 
 def detect_target(image):
+    """
+    Detect the target as a red square using template matching
+    :param image: The image taken from the video flow
+    :return: the target coordinate and the image masked with a null rectangle to cover the target and not detect it as
+    an obstacle.
+    """
     template = cv2.imread('Vision/feuille_rouge.png')
     _, w, h = template.shape[::-1]
     methods = ['cv2.TM_CCOEFF', 'cv2.TM_CCOEFF_NORMED', 'cv2.TM_CCORR', 'cv2.TM_CCORR_NORMED', 'cv2.TM_SQDIFF',
@@ -89,8 +105,12 @@ def detect_target(image):
     return target_coordinates, img, res
 
 
-def detect_obstacle(image):  # detect les contours, puis recupere les coins de chaque polygone
-   
+def detect_obstacle(image):
+    """
+    Detects les contours, puis recupere les coins de chaque polygone
+    :param image: The image taken from the video flow
+    :return: The obstacles in the form of list of points.
+    """
     img = image.copy()
 
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -119,26 +139,41 @@ def detect_obstacle(image):  # detect les contours, puis recupere les coins de c
     return gray, contours, shapes, shape_center
 
 
-def sort_vertices_clockwise(shapes):  # reorder coin of the shapes clockwise
-
+def sort_vertices_clockwise(shapes):
+    """
+    Reorder coin of the shapes clockwise
+    :param shapes: All the obstacle in the form of list of points
+    :return: The obstacles in the form of a list of corners but this time ordered in clockwise direction
+    """
     lowest = min(shapes, key=lambda x: (x[1], x[0]))
     vertices = sorted(shapes, key=lambda x: math.atan2(x[1] - lowest[1], x[0] - lowest[0]) + 2 * math.pi)
     return vertices
 
 
-def add_margin(shape, listCenters, margin):  #list center contain the center coordinates of each shape 
-
+def add_margin(shape, listCenters, margin):
+    """
+    List center contain the center coordinates of each shape
+    :param shape:  All the obstacle in the form of list of points
+    :param listCenters: The list of the centers of all obstacles.
+    :param margin: The number of pixels we want to increase the size of obstacles.
+    :return: The obstacles extended by a number of pixels corresponding to margin in the form of a list of corners
+    """
     for i in range(len(shape)):
         for j in range(len(shape[i])):
             u = shape[i][j] - listCenters[i]
             u_norm = u / np.linalg.norm(u)
             shape[i][j] = shape[i][j] + margin*u_norm
     return shape
-   
-
 
 
 def transmit_data(image, show, margin):
+    """
+    Principal function of vision that make the link between Vision and path planning module.
+    :param image: The image taken from the video flow
+    :param show: If this boolean is true we also plot the transmitted data, useful to debug
+    :param margin: The number of pixels we want to increase the size of obstacles.
+    :return: All the data mandatory to find the shortest path
+    """
     img_start, start_coor, (center1, center2), _ = detect_start1(image)
     target_coor, img_target, _ = detect_target(img_start)
     gray2, _, shapes, shape_center = detect_obstacle(img_target)

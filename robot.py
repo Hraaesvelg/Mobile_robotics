@@ -19,7 +19,6 @@ class RobotNav:
         """
         Initializing robot class to enable path_finding
         """
-
         # Robot geometry
         self.radius = 55
         self.length = 110
@@ -61,9 +60,16 @@ class RobotNav:
 
         self.shapes = None
 
-    # front is a boolean set to true if we want the front center and to false when we want the back center
     def get_thymio_values(self, img, front, node, client):
-
+        """
+        Detect the geometric data of the thymio using camera and odometry
+        :param img: The image we want to analyse
+        :param front: front is a boolean set to true if we want the front center and to false when we want the
+        back center
+        :param node: needed to control the motor of the robot
+        :param client: needed to ask data from sensors to our robot
+        :return: Return the position and speed structure used by kalman
+        """
         x = 0
         y = 0
         vx = 0
@@ -93,6 +99,12 @@ class RobotNav:
         return x, y, vx, vy, detection
 
     def set_last_position(self, front, back):
+        """
+        Set the position of the robot within the class robot
+        :param front: Position of the front green circle on the robot
+        :param back: Position of the bach green circle on the robot
+        :return: Nothing but set the position of the robot
+        """
         front = np.array(front)
         back = np.array(back)
         self.center_front = front
@@ -101,10 +113,13 @@ class RobotNav:
         self.orientation = self.compute_orientation(front, back)
         return 0
 
-    # Return orientation compared to x-axis between pi and -pi
     def compute_orientation(self, front, back):
-        #print(front)
-        #print(back)
+        """
+        Return orientation compared to x-axis between pi and -pi
+        :param front:  Position of the front green circle on the robot
+        :param back:  Position of the bach green circle on the robot
+        :return: the computed angle with the horizontal axis
+        """
         x = front[0] - back[0]
         y = front[1] - back[1]
         orientation = math.atan2(y, x)
@@ -128,22 +143,29 @@ class RobotNav:
 
             self.start = (self.x_img, self.y_img)
 
-    def update_position_cam(self, cam_data,node, client):
+    def update_position_cam(self, cam_data, node, client):
         """
         Update robot's position from camera data
         :param cam_data: ((x_center, y_center),(x_front, y_front)): allows us to  vectorize Thymio position
+        :param node: needed to control the motor of the robot
+        :param client: needed to ask data from sensors to our robot
+        :return: Nothing but update the position of the robot
         """
         if cam_data is not None:
             self.theta_img = math.atan2(cam_data[0][1] - cam_data[1][1], cam_data[0][0] - cam_data[1][0])
             self.x_img = cam_data[0][0]
             self.y_img = cam_data[0][1]
-            #print(cam_data[1])
-            #print(cam_data[0])
             self.set_last_position(cam_data[1], cam_data[0])
             self.path_img.append(self.middle)
             self.vx, self.vy = ctrl.get_motors_speed(node, client)
 
-    def update_position_kalman(self, node, client, detection):
+    def update_position_kalman(self, node, client):
+        """
+        Update the position of the robot using kalman filter when the camera doesn't find the robot
+        :param node: needed to control the motor of the robot
+        :param client: needed to ask data from sensors to our robot
+        :return: Nothing but update the position of the robot
+        """
         [x_front, y_front] = [self.center_front[0], self.center_front[1]]
         [x_back, y_back] = [self.center_back[0], self.center_back[1]]
         speed = (ctrl.get_motors_speed(node, client)[0] + ctrl.get_motors_speed(node, client)[1])/2 * 0.3
@@ -160,7 +182,6 @@ class RobotNav:
         self.path_kalman.append(self.middle)
         self.vx = vx
         self.vy = vy
-
 
     def set_goal(self, goal):
         """
@@ -206,6 +227,13 @@ class RobotNav:
         return self.crt_stp
 
     def initialisation_step(self, img, margin, show=False):
+        """
+        Initialise the path the robot must follow to reach the target without touching the obstacles
+        :param img: The image taken by the camera to determine the starting state
+        :param margin: The number of pixels we want to enlarge the found obstacles by
+        :param show: If this parameter is on true plot the data founded, useful to debug or for demonstration
+        :return:
+        """
         self.state = 0
         start, target, shapes, size, start_points = vs.transmit_data(img, show, margin)
         # Initialize the starting position
@@ -216,7 +244,6 @@ class RobotNav:
         shortest, shapes = glb.build_vis_graph(shapes, start, target)
         self.path = shortest
         self.shapes = shapes
-        print(shortest)
         plt.imshow(img)
         if show:
             print(type(img))
@@ -229,23 +256,32 @@ class RobotNav:
             plt.show()
 
     def get_shapes(self):
-            return self.shapes
-    def get_crt_step(self):
-        return self.crt_stp
-
-    def increase_step(self):
-        self.crt_stp = self.crt_stp + 1
+        """
+        Getter for the obstacles detected in the map. In the form of a list of corners
+        :return: A list of corners (Points) representing the obstacles
+        """
+        return self.shapes
 
     def get_state(self):
+        """
+        Getter for the geometric properties of the robot
+        :return: The position and the orientation of the robot [[pos_x, pos_y], orientation]
+        """
         return self.state
 
     def set_state(self, state):
+        """
+        Function used to update the state of the robot (In regard with the finite machine method)
+        :param state: The state attribute of our robot
+        """
         self.state = state
 
-    def avoidance_procedure(self):
-        print('Currently avoiding the obstacle')
-
     def get_path(self, type):
+        """
+        Getter for the different path attributes of the robot.
+        :param type: String to choose the path we want, can be 'kalman' or 'img'
+        :return: The chosen path, by default return the shortest path computed
+        """
         if type == 'kalman':
             return self.path_kalman
         elif type == 'img':
@@ -254,5 +290,9 @@ class RobotNav:
             return self.path
 
     def get_geometry(self):
+        """
+        Getter for the geometric properties of the robot
+        :return: The position and the orientation of the robot [[pos_x, pos_y], orientation]
+        """
         return self.middle, self.orientation
 
