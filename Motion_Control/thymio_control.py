@@ -12,7 +12,7 @@ v_max = 200
 v_min = 20
 thres_arrived = 50
 angle_thres = 0.17
-obstSpeedGain = np.array([6,4,-2,-0,-0])/100
+obstSpeedGain = np.array([6, 4, -2, -0, -0]) / 100
 
 
 def thym_motors(right, left):
@@ -59,7 +59,6 @@ def get_motors_speed(node, client):
 def get_prox_sensors(node, client):
     """
     Function to survey the thymio's sensors
-    :param node:
     :param node, client: link to our robot
     :return: structure containing proximity sensors' values ([prox1,..., prox8])
     """
@@ -69,34 +68,43 @@ def get_prox_sensors(node, client):
 
 
 def astolfi(pos, theta, target, node, client):
-    state = 0  # this functions is called recursivly untill state=1 i.e. the thymio has arrived
+    """
+    Main controller of the robot using the basis of astolfi controler with some modifications to implement obstacles
+    avoidance
+    :param pos: Actual position of the robot in the form of a point: [x, y]
+    :param theta: Actual angle of the robot with the horizontal axis: integer
+    :param target: Target's position in the form of a point: [x, y]
+    :param node, client: link to our robot
+    :return: state a boolean to know if the robot has reached the target
+    """
+    state = 0
     delta_pos = [target[0] - pos[0], -(target[1] - pos[1])]
     rho = np.linalg.norm(delta_pos)
     alpha = -theta - np.arctan2(delta_pos[1], delta_pos[0])
-    if alpha>np.pi:
-        alpha-=2*np.pi
-    elif alpha<-np.pi:
-        alpha+=2*np.pi
+    if alpha > np.pi:
+        alpha -= 2 * np.pi
+    elif alpha < -np.pi:
+        alpha += 2 * np.pi
     beta = theta - alpha
-    if beta>np.pi:
-        beta-=2*np.pi
-    elif beta<-np.pi:
-        beta+=2*np.pi
-    sensors= np.array(get_prox_sensors(node, client)[0:5])
-    vit_obst_left=np.sum(np.multiply(sensors,obstSpeedGain))
-    vit_obst_right=np.sum(np.multiply(sensors,np.flip(obstSpeedGain)))
-    #print("teta=",theta,"  alpa=",alpha,"  beta=",beta,"  rho=",rho) #prints to debug
-    
-    if (alpha>angle_thres):
+    if beta > np.pi:
+        beta -= 2 * np.pi
+    elif beta < -np.pi:
+        beta += 2 * np.pi
+    sensors = np.array(get_prox_sensors(node, client)[0:5])
+    vit_obst_left = np.sum(np.multiply(sensors, obstSpeedGain))
+    vit_obst_right = np.sum(np.multiply(sensors, np.flip(obstSpeedGain)))
+
+    if alpha > angle_thres:
         omega = ka * alpha + kb * beta
-    else: 
-        omega=kb*beta
-    
-    omega = ka * alpha + kb * beta
+    else:
+        omega = kb * beta
+
     if rho > thres_arrived:
         v = kp * rho
-        if v > v_max: v = v_max
-        if v < v_min: v = v_min
+        if v > v_max:
+            v = v_max
+        if v < v_min:
+            v = v_min
     else:
         v = 0
         state = 1
@@ -104,7 +112,3 @@ def astolfi(pos, theta, target, node, client):
     right_speed = v + omega + vit_obst_right
     set_motor_speed(int(right_speed), int(left_speed), node)
     return state
-
-
-def leds_blink(node):
-    return 0
