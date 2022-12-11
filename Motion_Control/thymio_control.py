@@ -107,4 +107,14 @@ def astolfi(pos, theta, target, node, client):
 
 
 def leds_blink(node):
-    return 0
+    #led show to celebrate the thymio's arrival
+    program = """
+    var on = 0  # 0=off, 1=on
+    timer.period[0] = 500
+
+    onevent timer0
+    on = 1 - on  # "on = not on" with a syntax Aseba accepts
+    leds.top = [32 * on, 32 * on, 0]
+    """
+    aw(node.compile(program))
+    aw(node.run())
