@@ -7,20 +7,14 @@ T_s = 0.1
 ## Kalman filter matrices
 A = np.array([[1.0, 0, T_s, 0],[0, 1.0, 0, T_s],[0, 0, 1.0, 0],[0, 0, 0, 1.0]])
 B = np.array([[T_s, 0], [0, T_s], [1.0, 0], [0, 1.0]])
-Q = np.diag([2, 2, 3, 3])
+Q = np.diag([2, 2, 2, 2])
 H = np.eye(4)
 
-''' Ces matrices sont à vérifier et redéfinir en fonction de nos besoins ''' 
+#     x, y, vx, vy         Measured state.
+#     dvx, dvy             Velocity input.
 
-#  @param   x_meas          Measured x-coordinate.
-#  @param   y_meas          Measured y-coordinate.
-#  @param   vx_meas         Measured x-velocity.
-#  @param   vy_meas         Measured y-velocity.
-#  @param   dvx             y-velocity control input.
-#  @param   dvy             x-velocity control input.
-
-
-def kalman_filter(x_meas, y_meas, vx_meas, vy_meas, x_est_prev, p_est_prev, dvx=0, dvy=0, detection=True):
+#Adapted function from the course exercises session 8
+def kalman_filter(x, y, vx, vy, x_est_prev, p_est_prev, dvx=0, dvy=0, detection=True):
     
     Input = np.array([dvx, dvy])
     x_est_a_priori = np.dot(A, x_est_prev) + np.dot(B, Input)
@@ -29,11 +23,11 @@ def kalman_filter(x_meas, y_meas, vx_meas, vy_meas, x_est_prev, p_est_prev, dvx=
     p_est_a_priori = p_est_a_priori + Q if type(Q) != type(None) else p_est_a_priori
     
     if detection:
-        R = np.diag([0.25, 0.25, 0.30, 0.30])
+        R = np.diag([0.48, 0.48, 0.64, 0.49])
     else:
         R = np.diag([math.inf, math.inf, math.inf, math.inf])
         
-    y = np.array([x_meas, y_meas, vx_meas, vy_meas])
+    y = np.array([x, y, vx, vy])
     i = y - np.dot(H, x_est_a_priori)
     S = np.dot(H, np.dot(p_est_a_priori, H.T)) + R
     K = np.dot(p_est_a_priori, np.dot(H.T, np.linalg.inv(S)))
