@@ -34,41 +34,7 @@ def plot_geometric_data(map, color='Blues', show=True):
         plt.show()
 
 
-def obstacles_to_polygons(obst):
-    """
-    Convert the points given by Vision functions, then convert them using Polygon (check made to know
-    if the conversion is possible)
-    :param obst:  list of points detected by the Vision related functions
-    :return polygons: A geoserie elements containing all the obstacle
-    """
-    poly = []
-    final = []
-    for obstacle in obst:
-        polygon = []
-        for point in obstacle:
-            polygon.append([point[0][0], point[0][1]])
-        poly.append(polygon)
-        # test to know if the obstacle can be converted
-        if np.size(polygon) > 6:
-            final.append(Polygon(polygon))
-    polygons = GeoSeries(final)
-    return polygons
 
-
-def polygons_2_points(polygons):
-    """
-    Inverse of obstacles_to_polygons(): turn a set of polygons in points for vysgraph algorithm
-    :param polygons: set of polygons
-    :return: polygons in the form of points
-    """
-    polygon = []
-    for pol in polygons:
-        x, y = pol.exterior.coords.xy
-        list_point = []
-        for i in range(len(x)):
-            list_point.append(vg.Point(x[i], y[i]))
-        polygon.append(list_point)
-    return polygon
 
 
 def build_vis_graph(shapes, start, target):
@@ -79,10 +45,8 @@ def build_vis_graph(shapes, start, target):
     :param target: Goal identified
     :return: The shortest path to go to the goal from the initial position
     """
-    startx = str(start[0])
-    starty = str(start[1])
-
-    start = vg.Point(startx, starty)
+   
+    start = vg.Point(str(start[0]), str(start[1]))
     target = vg.Point(str(target[0]), str(target[1]))
     vgPoints = []
 
