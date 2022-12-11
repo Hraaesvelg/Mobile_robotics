@@ -142,6 +142,7 @@ class RobotNav:
             self.theta_kalman = self.theta_img
 
             self.start = (self.x_img, self.y_img)
+            self.middle=self.start
 
     def update_position_cam(self, cam_data, node, client):
         """

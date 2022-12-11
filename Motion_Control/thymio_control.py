@@ -4,14 +4,14 @@ import math
 
 '''controller constants to tune accordingly'''
 kp = 0.5  # >0
-ka = 25  # > kp
+ka = 20  # > kp
 kb = -0.01  # <0
 
 '''speed limits and sensors thresholds to tune accordingly'''
 v_max = 200
-v_min = 20
-thres_arrived = 50
-angle_thres = 0.17
+v_min = 100
+thres_arrived = 40
+angle_thres = 0.1
 obstSpeedGain = np.array([6, 4, -2, -0, -0]) / 100
 
 
@@ -66,6 +66,34 @@ def get_prox_sensors(node, client):
     aw(client.sleep(0.05))
     return node.v.prox.horizontal
 
+def get_angle2goal(geometry, goal):
+    """
+
+    Compute the angle between thecurent orientation of the tymio and its next goal
+    :return: beta the angle btw goal/crt orientation
+    """
+    beta = math.atan2(goal[1] - geometry[0][1], goal[0] - geometry[0][0])
+    if beta - geometry[1] < -np.pi:
+        beta = -(beta - geometry[1] + np.pi)
+    elif beta - geometry[1] > np.pi:
+        beta = -(beta - geometry[1] - np.pi)
+    else:
+        beta = beta - geometry[1]
+    return beta
+
+def get_correct_orientation(beta, node, speed, tol):
+    if abs(beta) < tol:
+        #print("right angle")
+        #ctrl.stop_motors(node)
+        return(True)
+    if beta < 0 :
+        ctrl.set_motor_speed(-speed, speed, node)
+        return(False)
+    elif beta > 0:
+        
+        ctrl.set_motor_speed(speed, -speed, node)
+        return(False)
+    
 
 def astolfi(pos, theta, target, node, client):
     """
@@ -92,12 +120,7 @@ def astolfi(pos, theta, target, node, client):
     sensors = np.array(get_prox_sensors(node, client)[0:5])
     vit_obst_left = np.sum(np.multiply(sensors, obstSpeedGain))
     vit_obst_right = np.sum(np.multiply(sensors, np.flip(obstSpeedGain)))
-
-    if alpha > angle_thres:
-        omega = ka * alpha + kb * beta
-    else:
-        omega = kb * beta
-
+    omega = ka * alpha + kb * beta
     if rho > thres_arrived:
         v = kp * rho
         if v > v_max: v = v_max
