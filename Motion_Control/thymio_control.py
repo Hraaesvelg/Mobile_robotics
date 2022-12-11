@@ -83,15 +83,13 @@ def get_angle2goal(geometry, goal):
 
 def get_correct_orientation(beta, node, speed, tol):
     if abs(beta) < tol:
-        #print("right angle")
-        #ctrl.stop_motors(node)
         return(True)
     if beta < 0 :
-        ctrl.set_motor_speed(-speed, speed, node)
+        set_motor_speed(-speed, speed, node)
         return(False)
     elif beta > 0:
         
-        ctrl.set_motor_speed(speed, -speed, node)
+        set_motor_speed(speed, -speed, node)
         return(False)
     
 
