@@ -276,7 +276,7 @@ class RobotNav:
         """
         self.state = state
 
-    def get_path(self, type):
+    def get_path(self, ):
         """
         Getter for the different path attributes of the robot.
         :param type: String to choose the path we want, can be 'kalman' or 'img'
