@@ -78,6 +78,13 @@ def draw_path(img, shortest):
 
 
 def draw_thymio(img, path, mode):
+    """
+
+    :param img: The Image we want to modify
+    :param path: A list of all the previous position of the robot
+    :param mode: If the input mode is 'kalman' draw all position 
+    :return:
+    """
     for i in range(len(path)):
         if mode == 'kalman':
             img = cv2.circle(img, (int(path[i][0]), int(path[i][1])), int(3), (0, 255, 0), 2)
