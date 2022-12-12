@@ -3,7 +3,7 @@ import numpy as np
 import math
 
 '''controller constants to tune accordingly'''
-kp = 0.7  # >0
+kp = 1  # >0
 ka = 100  # > kp
 kb = -0.01  # <0
 
