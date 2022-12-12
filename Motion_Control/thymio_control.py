@@ -120,16 +120,8 @@ def astolfi(pos, theta, target, node, client):
     else:
         v = 0
         state = 1
-    if abs(alpha)<np.pi*2/3:
-        if omega < 0:
-            left_speed = v - omega + vit_obst_left
-            right_speed = v + vit_obst_right
-        else:
-            left_speed = v + vit_obst_left
-            right_speed = v + omega + vit_obst_right
-    else:
-        left_speed = v - omega + vit_obst_left
-        right_speed = v + + omega + vit_obst_right
+    left_speed = v - omega + vit_obst_left
+    right_speed = v + + omega + vit_obst_right
     set_motor_speed(int(right_speed), int(left_speed), node)
     return state
 
