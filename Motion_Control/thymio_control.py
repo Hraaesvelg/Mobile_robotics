@@ -3,15 +3,14 @@ import numpy as np
 import math
 
 '''controller constants to tune accordingly'''
-kp = 0.5  # >0
-ka = 20  # > kp
+kp = 0.7  # >0
+ka = 100  # > kp
 kb = -0.01  # <0
 
 '''speed limits and sensors thresholds to tune accordingly'''
 v_max = 200
-v_min = 100
+v_min = 70
 thres_arrived = 40
-angle_thres = 0.1
 obstSpeedGain = np.array([6, 4, -2, -0, -0]) / 100
 
 
@@ -72,25 +71,20 @@ def get_angle2goal(geometry, goal):
     Compute the angle between thecurent orientation of the tymio and its next goal
     :return: beta the angle btw goal/crt orientation
     """
-    beta = math.atan2(goal[1] - geometry[0][1], goal[0] - geometry[0][0])
-    if beta - geometry[1] < -np.pi:
-        beta = -(beta - geometry[1] + np.pi)
-    elif beta - geometry[1] > np.pi:
-        beta = -(beta - geometry[1] - np.pi)
-    else:
-        beta = beta - geometry[1]
-    return beta
+    beta = math.atan2((goal[1] - geometry[0][1]), goal[0] - geometry[0][0])- geometry[1] - np.pi
+    if beta < -np.pi:
+        beta = beta + 2*np.pi
+    elif beta > np.pi:
+        beta = beta- 2*np.pi
+    return -beta
 
 def get_correct_orientation(beta, node, speed, tol):
     if abs(beta) < tol:
-        return(True)
+        stop_motors(node)
     if beta < 0 :
         set_motor_speed(-speed, speed, node)
-        return(False)
     elif beta > 0:
-        
         set_motor_speed(speed, -speed, node)
-        return(False)
     
 
 def astolfi(pos, theta, target, node, client):
@@ -105,12 +99,12 @@ def astolfi(pos, theta, target, node, client):
     state = 0
     delta_pos = [target[0] - pos[0], -(target[1] - pos[1])]
     rho = np.linalg.norm(delta_pos)
-    alpha = -theta - np.arctan2(delta_pos[1], delta_pos[0])
+    alpha = theta + np.arctan2(delta_pos[1], delta_pos[0]) - np.pi
     if alpha > np.pi:
         alpha -= 2 * np.pi
     elif alpha < -np.pi:
         alpha += 2 * np.pi
-    beta = theta - alpha
+    beta = theta - alpha - np.pi
     if beta > np.pi:
         beta -= 2 * np.pi
     elif beta < -np.pi:
@@ -126,8 +120,16 @@ def astolfi(pos, theta, target, node, client):
     else:
         v = 0
         state = 1
-    left_speed = v - omega + vit_obst_left
-    right_speed = v + omega + vit_obst_right
+    if abs(alpha)<np.pi*2/3:
+        if omega < 0:
+            left_speed = v - omega + vit_obst_left
+            right_speed = v + vit_obst_right
+        else:
+            left_speed = v + vit_obst_left
+            right_speed = v + omega + vit_obst_right
+    else:
+        left_speed = v - omega + vit_obst_left
+        right_speed = v + + omega + vit_obst_right
     set_motor_speed(int(right_speed), int(left_speed), node)
     return state
 
